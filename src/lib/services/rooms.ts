@@ -3,7 +3,6 @@ import {
 	addDoc,
 	arrayUnion,
 	collection,
-	doc,
 	getDocs,
 	query,
 	updateDoc,
@@ -38,8 +37,17 @@ export const getRooms = async () => {
 };
 
 export const addRoom = async (data: IRoom) => {
-	const ret = await addDoc(collection(hmSysDb, 'rooms'), data);
-	console.log({ ret });
+	try {
+		await addDoc(collection(hmSysDb, 'rooms'), data);
+		return {
+			success: true,
+			message: 'Room added successfully.'
+		};
+	} catch (e) {
+		return {
+			message: e
+		};
+	}
 };
 
 export const allocation = async (roomCode: string, data: any) => {
@@ -50,6 +58,10 @@ export const allocation = async (roomCode: string, data: any) => {
 		if (!querySnapshot.empty) {
 			const docRef = querySnapshot.docs[0].ref;
 			await updateDoc(docRef, { occupants: arrayUnion(data[0]) });
+			return {
+				success: true,
+				message: 'Allocation completed.'
+			};
 		} else {
 			console.log('No such document!');
 		}
@@ -60,3 +72,30 @@ export const allocation = async (roomCode: string, data: any) => {
 		console.log(e);
 	}
 };
+
+export const removeAllocation = async (roomCode: string) => {
+	try {
+		const roomRef = collection(hmSysDb, 'rooms');
+		const q = query(roomRef, where('roomCode', '==', roomCode));
+		const querySnapshot: any = await getDocs(q);
+		if (!querySnapshot.empty) {
+			const docRef = querySnapshot.docs[0].ref;
+			await updateDoc(docRef, { occupants: [] });
+			return {
+				success: true,
+				message: 'Allocation reset successfully.'
+			};
+		} else {
+			return {
+				success: false,
+				message: 'No such document!'
+			}
+		}
+		// console.log({itemRef})
+		// const ret = await updateDoc(itemRef, data);
+		// console.log({ret})
+	} catch (e) {
+		console.log(e);
+	}
+};
+

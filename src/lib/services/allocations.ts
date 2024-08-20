@@ -33,7 +33,7 @@ export const getRoomAllocation = async (roomCode: string) => {
         const querySnapshot: any = await getDocs(r);
         const x: any = []
         querySnapshot.forEach((doc: any) => {
-            x.push({ ...doc.data().occupants[0] });
+            x.push(doc.data().occupants[0]);
         })
         console.log({x})
 		roomAllocationStore.set(x);

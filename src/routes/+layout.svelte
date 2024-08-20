@@ -3,6 +3,7 @@
 import Nav from '$lib/components/nav.svelte';
 	import Sidebar, { type IMenu } from '$lib/components/sidebar.svelte';
 	import { pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
+	import { Toaster } from 'svelte-french-toast';
 	import '../app.pcss';
 
 
@@ -46,6 +47,7 @@ import Nav from '$lib/components/nav.svelte';
   ]
 </script>
 
+<Toaster />
 <!-- <div class="h-screen bg-slate-100 flex items-center justify-center"> -->
   <div class="flex mx-auto h-screen w-full overflow-auto rounded-lg">
     <div class="sticky top-0">
@@ -55,7 +57,7 @@ import Nav from '$lib/components/nav.svelte';
       <Nav />
       <div class="h-full p-4 overflow-auto bg-white">
         <div class="w-full flex py-2 justify-between">
-          <div class="text-xs  text-gray-500">{$pageDescription}</div>
+          <div class="text-xs bg-white text-gray-500">{$pageDescription}</div>
           <div class="flex space-x-2">
             {#each $pageActionButtons as btn}
             <!-- <div> -->

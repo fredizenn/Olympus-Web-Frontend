@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/button.svelte';
-import Form from '$lib/components/controls/form.svelte';
+	import Form from '$lib/components/controls/form.svelte';
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import Loader from '$lib/components/loader.svelte';
 	import Modal from '$lib/components/modal.svelte';
@@ -8,32 +8,46 @@ import Form from '$lib/components/controls/form.svelte';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
-	import * as yup from 'yup'
+	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import { allocate, allocationsStore, getAllocations, getRoomAllocation, roomAllocationStore } from '$lib/services/allocations';
+	import {
+		allocate,
+		allocationsStore,
+		getAllocations,
+		getRoomAllocation,
+		roomAllocationStore
+	} from '$lib/services/allocations';
 	import { getResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import { toCurrencyFormat } from '$lib/utils/currency';
+	import {
+		addMaintenanceRequest,
+		getMaintenanceRequests,
+		maintenanceRequestsStore,
+		updateStatus
+	} from '$lib/services/maintenance';
+	import FormTextArea from '$lib/components/controls/formTextArea.svelte';
 
 	// const { uniqueId } = pkg
 	let loading = false;
 	let showAddModal = false;
-	let showAllocationModal = false;
-	let currentRoom: any
-	let allocating = false;
+	let currentRequest: any;
 	let saving = false;
-	let fetchingAllocations = false;
-	let residentOptions: any = []
-	let roomOccupants: any = []
+	let showUpdateStatusModal = false;
+	let updateModalTitle = '';
+	let modalButtonLabel = '';
+	let modalButtonAction: any;
+	let modalDescription: any;
+	let btnIndx: any;
 	$pageDescription = 'Manage maintenance requests.';
 	$pageActionButtons = [
 		{
 			label: 'Add',
 			icon: 'hugeicons:folder-add',
 			onClick: () => (showAddModal = true)
-		},
+		}
 		// {
 		// 	label: 'Allocation',
 		// 	icon: 'hugeicons:passport-valid',
@@ -42,40 +56,43 @@ import Form from '$lib/components/controls/form.svelte';
 	];
 	const columns = [
 		{
-			name: 'Room Number',
-			cell: (row: any) => row.roomNumber
+			name: 'Code',
+			cell: (row: any) => row.mrCode
 		},
 		{
-			name: 'Allowed No. of Residents',
-			cell: (row: any) => row.numberOfOccupants
+			name: 'Description',
+			cell: (row: any) => row.description
 		},
 		{
-			name: 'Room Price (GHC)',
-			cell: (row: any) => toCurrencyFormat(row.roomFee),
+			name: 'Issued By',
+			cell: (row: any) => row.issuedBy
 		},
 		{
-			name: 'Vacancy Status',
-			cell: (row: any) => (row.isVacant ? 'Vacant' : 'Occupied'),
-			cellStyle: (row: any) =>
-				row.isVacant ? 'rounded py-0.5 bg-green-100' : 'rounded py-0.5 bg-red-100'
+			name: 'Status',
+			cell: (row: any) => row.status,
+			cellStyle: (row: any) => {
+				if (row.status === 'Resolved') {
+					return 'rounded py-0.5 bg-green-100';
+				} else if (row.status === 'Pending') {
+					return 'rounded py-0.5 bg-yellow-100';
+				} else {
+					return 'rounded py-0.5 bg-red-100';
+				}
+			}
 		}
 	];
 
-	$activePageHeader = 'Rooms';
+	$activePageHeader = 'Maintenance Requests';
 
 	const schema = yup.object().shape({
-		roomNumber: yup.string().required(),
-		numberOfOccupants: yup.number().min(1).required()
-	})
+		description: yup.string().required().label('Description'),
+		issuedBy: yup.string().required().label('Issued By')
+	});
 
-	const allocationSchema = yup.object().shape({
-		
-	})
-	async function fetchRooms() {
+	async function fetchMaintenanceRequests() {
 		try {
 			loading = true;
-			await getRooms();
-			console.log($roomsStore);
+			await getMaintenanceRequests();
 			loading = false;
 		} catch (error) {
 			loading = false;
@@ -83,46 +100,33 @@ import Form from '$lib/components/controls/form.svelte';
 		}
 	}
 
-	async function createRoom({ detail }: any) {
+	async function createMaintenanceRequest({ detail }: any) {
 		saving = true;
-		const { values } = detail
-		console.log({detail})
+		const { values } = detail;
+		console.log({ detail });
 		try {
-
-			const res = await addRoom({...values, roomCode: `rm_${uuidv4()}`, isVacant: true, occupants: []});
-			console.log(res)
+			const res = await addMaintenanceRequest({
+				...values,
+				mrCode: `mr_${uuidv4()}`,
+				status: 'Pending',
+				createdAt: Date.now()
+			});
 			saving = false;
 			showAddModal = false;
-			await fetchRooms()
+			toast.success('Request created successfully.');
+			await fetchMaintenanceRequests();
 		} catch (e) {
 			toast.error('Error adding room. Please try again later.');
 		}
 	}
 
-	const allocationsColumns = [
-		{
-			name: 'Resident',
-			cell: (row: any) => row.firstName + ' ' + row.lastName
-		},
-		{
-			name: 'Email',
-			cell: (row: any) => row.email
-		},
-		{
-			name: 'Sex',
-			cell: (row: any) => row.sex
-		}
-	]
-
-	async function allocateRoom({ detail }: any) {
-		console.log({detail})
-		allocating = true
+	async function updateMaintenanceStatus(mrCode: string, status: any) {
+		saving = true;
 		try {
-			console.log({detail})
-			const res = await allocation(currentRoom.roomCode, detail.values.occupants)
-			allocating = false;
-		} catch (e) {
-		}
+			const res = await updateStatus(mrCode, status);
+			await fetchMaintenanceRequests();
+			saving = false;
+		} catch (e) {}
 	}
 
 	// onMount(async() => {
@@ -131,75 +135,85 @@ import Form from '$lib/components/controls/form.svelte';
 
 	const actionButtons = [
 		{
-			icon: 'hugeicons:subnode-add',
-			tooltip: 'Manage Allocations'
+			icon: 'hugeicons:setting-done-01',
+			tooltip: 'Mark as Resolved',
+			iconColor: 'text-green-600',
+			hide: (row: any) => (row.status !== 'Pending' ? false : true)
+		},
+		{
+			icon: 'hugeicons:cancel-circle',
+			tooltip: 'Cancel request',
+			iconColor: 'text-red-600',
+			hide: (row: any) => (row.status !== 'Pending' ? false : true)
 		}
-	]
+	];
 
 	function handleAction({ detail }: any) {
 		console.log({ detail });
-		showAllocationModal = true
-		
-		currentRoom = detail.row
-		roomOccupants = detail.row.occupants
-		console.log({roomOccupants})
+		btnIndx = detail.btnIndex;
+		currentRequest = detail.row;
+		modalDescription = { ...currentRequest };
+		showUpdateStatusModal = true;
+		switch (btnIndx) {
+			case 0:
+				updateModalTitle = 'Mark as Resolved';
+				modalButtonLabel = 'Proceed to mark this request as resolved';
+
+				break;
+			case 1:
+				updateModalTitle = 'Cancel Request';
+
+				modalButtonLabel = 'Proceed to mark this request as cancelled';
+
+				break;
+		}
+		showUpdateStatusModal = true;
 	}
 
-
-	async function fetchResidents() {
+	async function doStatusChange() {
 		try {
-			loading = true;
-			await getResidents();
-			residentOptions = $residentsStore.map((r: any) => {
-				return {
-					email: r.email,
-					firstName: r.firstName,
-					sex: r.sex,
-					lastName: r.lastName,
-					label: `${r.firstName} ${r.lastName}`,
-					value: r.residentID
-				}
-			})
-			console.log($residentsStore);
-			loading = false;
-		} catch (error) {
-			loading = false;
-			console.log(error);
+			if (btnIndx === 0) {
+				await updateMaintenanceStatus(currentRequest.mrCode, {
+					...currentRequest,
+					status: 'Resolved'
+				});
+				showUpdateStatusModal = false;
+				toast.success('Request has been marked as resolved');
+			} else if (btnIndx === 1) {
+				await updateMaintenanceStatus(currentRequest.mrCode, {
+					...currentRequest,
+					status: 'Cancelled'
+				});
+				showUpdateStatusModal = false;
+				toast.success('Request has been cancelled');
+			} else {
+				toast.error('Something went wrong. Please try again later');
+			}
+		} catch (e: any) {
+			toast.error(e);
 		}
 	}
-
-	async function fetchAllocations() {
-		try {
-			fetchingAllocations = true;
-			await getAllocations();
-			console.log($allocationsStore);
-			fetchingAllocations = false;
-		} catch (error) {
-			fetchingAllocations = false;
-			console.log(error);
-		}
-	}
-
-	async function fetchRoomAllocation(roomCode: string) {
-		try {
-			fetchingAllocations = true;
-			await getRoomAllocation(roomCode);
-			console.log({$roomAllocationStore});
-			
-			// x = $roomAllocationStore.map((r: any) => {
-			// 	return {
-			// 		firstName: r.occupants[0].firstName,
-			// 		lastName: r.occupants[0].lastName,
-			// 		email: r.occupants[0].email,
-			// 		sex: r.occupants[0].sex
-			// 	}
-			// })
-
-			fetchingAllocations = false;
-		} catch (e) {
-			toast.error('Error fetching room allocation. Please try again later.');
-		}
-	}
+	// async function fetchResidents() {
+	// 	try {
+	// 		loading = true;
+	// 		await getResidents();
+	// 		residentOptions = $residentsStore.map((r: any) => {
+	// 			return {
+	// 				email: r.email,
+	// 				firstName: r.firstName,
+	// 				sex: r.sex,
+	// 				lastName: r.lastName,
+	// 				label: `${r.firstName} ${r.lastName}`,
+	// 				value: r.residentID
+	// 			}
+	// 		})
+	// 		console.log($residentsStore);
+	// 		loading = false;
+	// 	} catch (error) {
+	// 		loading = false;
+	// 		console.log(error);
+	// 	}
+	// }
 
 	const addRoomBtns = [
 		{
@@ -208,54 +222,99 @@ import Form from '$lib/components/controls/form.svelte';
 			loading: loading,
 			handler: () => {}
 		}
-	]
+	];
 
 	const allocationModalBtns = [
 		{
 			text: 'Allocate',
 			type: 'submit',
-			loading: allocating,
+			loading: saving,
 			handler: () => {}
 		}
-	]
+	];
 
 	onMount(async () => {
-		await fetchRooms();
-		await fetchResidents();
+		await fetchMaintenanceRequests();
 	});
 </script>
+
 <Toaster />
 <div>
 	<!-- {#if loading}
 		<Loader />
 	{:else} -->
-	<DataTable {loading} {actionButtons} on:buttonClicked={handleAction} {columns} bodyData={$roomsStore} />
+	<DataTable
+		{loading}
+		{actionButtons}
+		on:buttonClicked={handleAction}
+		{columns}
+		bodyData={$maintenanceRequestsStore}
+	/>
 
 	<!-- {/if} -->
 </div>
 
-{#if showAddModal}
+<!-- {#if showAddModal}
 	<Modal title="Add Room" bind:open={showAddModal}>
 		<Form {schema} on:submit={createRoom}>
 			<div class="md:grid grid-cols-2 gap-4">
 				<FormInput name="roomNumber" required showLabel label="Room Number" />
-				<FormInput name="numberOfOccupants" type="number" showLabel required min={1} label="Allowed Number of Residents" />
+				<FormInput
+					name="numberOfOccupants"
+					type="number"
+					showLabel
+					required
+					min={1}
+					label="Allowed Number of Residents"
+				/>
 			</div>
 			<div class="w-full flex mx-auto items-center justify-center align-middle py-4">
 				<Button disabled={saving} type="submit" label={saving ? 'Saving...' : 'Add Room'} />
 			</div>
 		</Form>
 	</Modal>
-{/if}
+{/if} -->
 
-{#if showAllocationModal}
-	<Modal title="Allocation: Room {currentRoom.roomNumber}"  bind:open={showAllocationModal}>
-		<DataTable columns={allocationsColumns} bodyData={roomOccupants} loading={fetchingAllocations}  />
-		<Form schema={allocationSchema} on:submit={allocateRoom}>
-			<FormSelect name="occupants" options={residentOptions} valueAsObject multiple showLabel label="Resident" />
+{#if showAddModal}
+	<Modal title="Maintenance Request" bind:open={showAddModal}>
+		<Form {schema} on:submit={createMaintenanceRequest}>
+			<div class="space-y-2">
+				<FormInput name="description" showLabel label="Description" required />
+				<FormInput name="issuedBy" showLabel label="Issued By" required />
+			</div>
+
 			<div class="w-full flex items-center py-4 justify-center">
-				<Button type="submit" label={allocating ? 'Allocating...' : "Allocate"} disabled={allocating} />
+				<Button type="submit" label={saving ? 'Saving...' : 'Save'} disabled={saving} />
 			</div>
 		</Form>
+	</Modal>
+{/if}
+
+{#if showUpdateStatusModal}
+	<Modal title={updateModalTitle} bind:open={showUpdateStatusModal}>
+		<div class="flex flex-col mx-auto align-middle w-2/3 justify-center">
+			<dl class="divide-y divide-gray-100">
+				<div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+					<dt class="text-sm font-medium">Description</dt>
+					<dd class="mt-1 text-sm leading-6 sm:col-span-2 sm:mt-0">
+						{modalDescription?.description}
+					</dd>
+				</div>
+				<div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+					<dt class="text-sm font-medium">Issued By</dt>
+					<dd class="mt-1 text-sm leading-6 sm:col-span-2 sm:mt-0">
+						{modalDescription?.issuedBy}
+					</dd>
+				</div>
+			</dl>
+			<Button
+				label={saving ? 'Please wait...' : modalButtonLabel}
+				hasIcon
+				icon="hugeicons:alert-02"
+				disabled={saving}
+				type="button"
+				onClick={doStatusChange}
+			/>
+		</div>
 	</Modal>
 {/if}

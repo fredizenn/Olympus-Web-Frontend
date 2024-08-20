@@ -11,6 +11,7 @@
 	import toast, { Toaster } from 'svelte-french-toast';
 	import * as yup from 'yup';
 	import pkg from 'lodash';
+	import { P } from 'flowbite-svelte';
 
 	const {uniqueId} = pkg
 	let loading = false;
@@ -56,28 +57,38 @@
 			name: 'Sex',
 			cell: (row: any) => row.sex
 		},
-		{
-			name: 'Room Number',
-			cell: (row: any) => row.isAllocated ? row.roomNumber : 'Not Allocated',
-		},
-		{
-			name: 'Status',
-			cell: (row: any) => (row.isActive ? 'Active' : 'Inactive'),
-			cellStyle: (row: any) => (row.isActive ? 'bg-green-100' : 'bg-red-100')
-		}
+		// {
+		// 	name: 'Room Number',
+		// 	cell: (row: any) => row.isAllocated ? row.roomNumber : 'Not Allocated',
+		// },
+		// {
+		// 	name: 'Status',
+		// 	cell: (row: any) => (row.isActive ? 'Active' : 'Inactive'),
+		// 	cellStyle: (row: any) => (row.isActive ? 'bg-green-100' : 'bg-red-100')
+		// }
 	];
 
 	async function createResident({ detail }: any) {
-		loading = true;
+		saving = true;
 		const { values } = detail;
-		console.log({ detail });
 		try {
-			const res = await addResident({
+			const res: any = await addResident({
 				...values,
-				residentID: uniqueId('rsd_')
+				residentID: $residentsStore.length ? $residentsStore[$residentsStore.length - 1].residentID + 1 : 1
 			});
-			loading = false;
+			if (res.success) {
+				toast.success(res.message);
+				showAddModal = false;
+				saving = false;
+				await fetchResidents();
+			} else {
+				saving = false;
+				showAddModal = false;
+				toast.error('Could not add resident.');
+			}
 		} catch (e) {
+			saving = false;
+			showAddModal = false;
 			toast.error('Error adding resident. Please try again later.');
 		}
 	}
@@ -117,8 +128,8 @@
 					<FormSelect options={sexes} name="sex" required showLabel label="Sex" />
 				</div>
 			</div>
-			<div>
-				<Button type="submit" label="Add Resident" />
+			<div class="flex justify-center w-full mt-2">
+				<Button type="submit" disabled={saving}  label={saving ? 'Saving...' : "Add Resident"} />
 			</div>
 		</Form>
 	</Modal>

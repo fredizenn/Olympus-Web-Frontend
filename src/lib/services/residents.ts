@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { browser } from '$app/environment';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import { writable } from 'svelte/store';
 import { hmSysDb } from './server';
 
-export const residentsStore = writable([]);
+export const residentsStore = writable<any>([]);
 
 export interface IResident {
     firstName: string,
@@ -29,5 +30,13 @@ export const getResidents = async () => {
 };
 
 export const addResident = async (data: any) => {
-    await addDoc(collection(hmSysDb, 'residents'), data);
+	try {
+		await addDoc(collection(hmSysDb, 'residents'), data);
+		return {
+			success: true,
+			message: 'Resident added successfully.',
+		}
+	} catch (error) {
+		console.log(error);
+	}
 }

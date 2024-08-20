@@ -1,17 +1,23 @@
 <script lang="ts">
 	import Button from '$lib/components/button.svelte';
-import Form from '$lib/components/controls/form.svelte';
+	import Form from '$lib/components/controls/form.svelte';
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import Loader from '$lib/components/loader.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { addRoom, allocation, getRooms, roomsStore } from '$lib/services/rooms';
+	import { addRoom, allocation, getRooms, removeAllocation, roomsStore } from '$lib/services/rooms';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
-	import * as yup from 'yup'
+	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import { allocate, allocationsStore, getAllocations, getRoomAllocation, roomAllocationStore } from '$lib/services/allocations';
+	import {
+		allocate,
+		allocationsStore,
+		getAllocations,
+		getRoomAllocation,
+		roomAllocationStore
+	} from '$lib/services/allocations';
 	import { getResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
@@ -21,19 +27,20 @@ import Form from '$lib/components/controls/form.svelte';
 	let loading = false;
 	let showAddModal = false;
 	let showAllocationModal = false;
-	let currentRoom: any
+	let currentRoom: any;
 	let allocating = false;
 	let saving = false;
 	let fetchingAllocations = false;
-	let residentOptions: any = []
-	let roomOccupants: any = []
+	let residentOptions: any = [];
+	let roomOccupants: any = [];
+	let resetting = false;
 	$pageDescription = 'Manage rooms and allocations';
 	$pageActionButtons = [
 		{
 			label: 'Add',
 			icon: 'hugeicons:folder-add',
 			onClick: () => (showAddModal = true)
-		},
+		}
 		// {
 		// 	label: 'Allocation',
 		// 	icon: 'hugeicons:passport-valid',
@@ -51,31 +58,35 @@ import Form from '$lib/components/controls/form.svelte';
 		},
 		{
 			name: 'Room Price (GHC)',
-			cell: (row: any) => toCurrencyFormat(row.roomFee),
+			cell: (row: any) => toCurrencyFormat(row.roomFee)
 		},
 		{
 			name: 'Vacancy Status',
-			cell: (row: any) => (row.isVacant ? 'Vacant' : 'Occupied'),
+			cell: (row: any) => (row.occupants.length < row.numberOfOccupants ? 'Vacant' : 'Occupied'),
 			cellStyle: (row: any) =>
-				row.isVacant ? 'rounded py-0.5 bg-green-100' : 'rounded py-0.5 bg-red-100'
+				row.occupants.length < row.numberOfOccupants
+					? 'rounded py-0.5 bg-green-100'
+					: 'rounded py-0.5 bg-red-100'
 		}
 	];
 
 	$activePageHeader = 'Rooms';
 
 	const schema = yup.object().shape({
-		roomNumber: yup.string().required(),
-		numberOfOccupants: yup.number().min(1).required()
-	})
+		roomNumber: yup.string().required().label('Room Number'),
+		numberOfOccupants: yup.number().min(1).required().label('Allowed Number of Residents'),
+		roomFee: yup.number().min(1).required().label('Room Fee')
+	});
 
 	const allocationSchema = yup.object().shape({
-		
-	})
+		// occupants: yup.object().test('Occupants', function (value) {
+		// 	return !!value;
+		// }).required('Please select at least one resident to allocate.')
+	});
 	async function fetchRooms() {
 		try {
 			loading = true;
-			await getRooms();
-			console.log($roomsStore);
+			await getRooms()
 			loading = false;
 		} catch (error) {
 			loading = false;
@@ -85,17 +96,22 @@ import Form from '$lib/components/controls/form.svelte';
 
 	async function createRoom({ detail }: any) {
 		saving = true;
-		const { values } = detail
-		console.log({detail})
+		const { values } = detail;
+		console.log({ detail });
 		try {
+			const res = await addRoom({
+				...values,
+				roomCode: `rm_${uuidv4()}`,
+				isVacant: true,
+				occupants: []
+			});
 
-			const res = await addRoom({...values, roomCode: `rm_${uuidv4()}`, isVacant: true, occupants: []});
-			console.log(res)
 			saving = false;
 			showAddModal = false;
-			await fetchRooms()
+			toast.success('Room added successfully');
+			await fetchRooms();
 		} catch (e) {
-			toast.error('Error adding room. Please try again later.');
+			toast.error('Error adding room. Please try again later');
 		}
 	}
 
@@ -112,19 +128,64 @@ import Form from '$lib/components/controls/form.svelte';
 			name: 'Sex',
 			cell: (row: any) => row.sex
 		}
-	]
+	];
 
 	async function allocateRoom({ detail }: any) {
-		console.log({detail})
-		allocating = true
+		allocating = true;
 		try {
-			console.log({detail})
-			const res = await allocation(currentRoom.roomCode, detail.values.occupants)
-			allocating = false;
+			if (
+				detail.values.occupants.length > 0 &&
+				detail.values.occupants.length >
+					currentRoom.numberOfOccupants - currentRoom.occupants.length
+			) {
+				toast.error(
+					`Slots exceeded. Please select only ${currentRoom.numberOfOccupants - currentRoom.occupants.length} resident to complete allocation.`
+				);
+				allocating = false;
+				return;
+			}
+
+			if (detail.values.occupants.length < 1) {
+				toast.error('Please select at least one resident to allocate.');
+				allocating = false;
+				return;
+			}
+			const res = await allocation(currentRoom.roomCode, detail.values.occupants);
+			if (res?.success) {
+				toast.success(res.message);
+
+				allocating = false;
+				showAllocationModal = false;
+				await fetchRooms();
+			} else {
+				toast.error('An error occurred. Please try again later.');
+				allocating = false;
+			}
 		} catch (e) {
+			console.log(e);
 		}
 	}
 
+	async function resetAllocation() {
+		resetting = true;
+		try {
+			
+			const res = await removeAllocation(currentRoom.roomCode);
+			if (res?.success) {
+				toast.success(res.message);
+				roomOccupants = [];
+				resetting = false;
+				showAllocationModal = false;
+				await fetchRooms();
+			} else {
+				toast.error('An error occurred. Please try again later.');
+				resetting = false;
+			}
+		} catch (e) {
+			resetting = false;
+			console.log(e);
+		}
+	}
 	// onMount(async() => {
 	//     console.log("hello")
 	// })
@@ -134,17 +195,19 @@ import Form from '$lib/components/controls/form.svelte';
 			icon: 'hugeicons:subnode-add',
 			tooltip: 'Manage Allocations'
 		}
-	]
+	];
 
 	function handleAction({ detail }: any) {
-		console.log({ detail });
-		showAllocationModal = true
-		
-		currentRoom = detail.row
-		roomOccupants = detail.row.occupants
-		console.log({roomOccupants})
-	}
+		showAllocationModal = true;
 
+		currentRoom = detail.row;
+		roomOccupants = detail.row.occupants;
+		// const existing: any = $residentsStore?.filter((value: string) =>
+		// 		$roomsStore.occupants.includes(value)
+		// 	);
+		// let existing = residentOptions.filter((value: any) => roomOccupants.includes(value.residentID))
+		// console.log({ existing });
+	}
 
 	async function fetchResidents() {
 		try {
@@ -158,9 +221,9 @@ import Form from '$lib/components/controls/form.svelte';
 					lastName: r.lastName,
 					label: `${r.firstName} ${r.lastName}`,
 					value: r.residentID
-				}
-			})
-			console.log($residentsStore);
+				};
+			});
+			
 			loading = false;
 		} catch (error) {
 			loading = false;
@@ -184,8 +247,8 @@ import Form from '$lib/components/controls/form.svelte';
 		try {
 			fetchingAllocations = true;
 			await getRoomAllocation(roomCode);
-			console.log({$roomAllocationStore});
-			
+			console.log({ $roomAllocationStore });
+
 			// x = $roomAllocationStore.map((r: any) => {
 			// 	return {
 			// 		firstName: r.occupants[0].firstName,
@@ -208,7 +271,7 @@ import Form from '$lib/components/controls/form.svelte';
 			loading: loading,
 			handler: () => {}
 		}
-	]
+	];
 
 	const allocationModalBtns = [
 		{
@@ -217,19 +280,26 @@ import Form from '$lib/components/controls/form.svelte';
 			loading: allocating,
 			handler: () => {}
 		}
-	]
+	];
 
 	onMount(async () => {
 		await fetchRooms();
 		await fetchResidents();
 	});
 </script>
+
 <Toaster />
 <div>
 	<!-- {#if loading}
 		<Loader />
 	{:else} -->
-	<DataTable {loading} {actionButtons} on:buttonClicked={handleAction} {columns} bodyData={$roomsStore} />
+	<DataTable
+		{loading}
+		{actionButtons}
+		on:buttonClicked={handleAction}
+		{columns}
+		bodyData={$roomsStore}
+	/>
 
 	<!-- {/if} -->
 </div>
@@ -238,8 +308,18 @@ import Form from '$lib/components/controls/form.svelte';
 	<Modal title="Add Room" bind:open={showAddModal}>
 		<Form {schema} on:submit={createRoom}>
 			<div class="md:grid grid-cols-2 gap-4">
-				<FormInput name="roomNumber" required showLabel label="Room Number" />
-				<FormInput name="numberOfOccupants" type="number" showLabel required min={1} label="Allowed Number of Residents" />
+				<div class="col-span-2">
+					<FormInput name="roomNumber" required showLabel label="Room Number" />
+				</div>
+				<FormInput
+					name="numberOfOccupants"
+					type="number"
+					showLabel
+					required
+					min={1}
+					label="Allowed Number of Residents"
+				/>
+				<FormInput name="roomFee" required type="number" min={1} showLabel label="Room Fee" />
 			</div>
 			<div class="w-full flex mx-auto items-center justify-center align-middle py-4">
 				<Button disabled={saving} type="submit" label={saving ? 'Saving...' : 'Add Room'} />
@@ -249,13 +329,44 @@ import Form from '$lib/components/controls/form.svelte';
 {/if}
 
 {#if showAllocationModal}
-	<Modal title="Allocation: Room {currentRoom.roomNumber}"  bind:open={showAllocationModal}>
-		<DataTable columns={allocationsColumns} bodyData={roomOccupants} loading={fetchingAllocations}  />
-		<Form schema={allocationSchema} on:submit={allocateRoom}>
-			<FormSelect name="occupants" options={residentOptions} valueAsObject multiple showLabel label="Resident" />
-			<div class="w-full flex items-center py-4 justify-center">
-				<Button type="submit" label={allocating ? 'Allocating...' : "Allocate"} disabled={allocating} />
+	<Modal title="Allocation: Room {currentRoom.roomNumber}" bind:open={showAllocationModal}>
+		{#if loading}
+			<Loader />
+		{:else}
+		<DataTable
+			columns={allocationsColumns}
+			bodyData={roomOccupants}
+			loading={fetchingAllocations}
+		/>
+		{/if}
+		{#if currentRoom.occupants.length < currentRoom.numberOfOccupants}
+			<Form schema={allocationSchema} on:submit={allocateRoom}>
+				<FormSelect
+					name="occupants"
+					options={residentOptions}
+					valueAsObject
+					multiple
+					showLabel
+					label="Resident"
+				/>
+				<div class="w-full flex items-center py-4 justify-center">
+					<Button
+						type="submit"
+						label={allocating ? 'Allocating...' : 'Allocate'}
+						disabled={allocating}
+					/>
+				</div>
+			</Form>
+		{:else}
+			<div class="w-full flex justify-center mx-auto align-middle">
+				<Button
+					label={resetting ? 'Resetting...' : "Room fully booked. Click to reset allocations"}
+					icon="hugeicons:alert-02"
+					disabled={resetting}
+					onClick={() => resetAllocation()}
+					hasIcon
+				/>
 			</div>
-		</Form>
+		{/if}
 	</Modal>
 {/if}
