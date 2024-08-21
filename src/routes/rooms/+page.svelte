@@ -22,6 +22,7 @@
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import { toCurrencyFormat } from '$lib/utils/currency';
+	import { goto } from '$app/navigation';
 
 	// const { uniqueId } = pkg
 	let loading = false;
@@ -86,7 +87,7 @@
 	async function fetchRooms() {
 		try {
 			loading = true;
-			await getRooms()
+			await getRooms();
 			loading = false;
 		} catch (error) {
 			loading = false;
@@ -101,15 +102,23 @@
 		try {
 			const res = await addRoom({
 				...values,
-				roomCode: `rm_${uuidv4()}`,
+				roomId: $roomsStore.length ? $roomsStore[$roomsStore.length - 1].roomId + 1 : 1,
+				roomCode: `RM_${uuidv4()}`,
 				isVacant: true,
 				occupants: []
 			});
 
-			saving = false;
-			showAddModal = false;
-			toast.success('Room added successfully');
-			await fetchRooms();
+			if (res.success) {
+				saving = false;
+				showAddModal = false;
+				toast.success('Room added successfully');
+				await fetchRooms();
+			} else {
+				saving = false;
+				showAddModal = false;
+				toast.success('Room added successfully');
+				toast.error('Something went wrong.');
+			}
 		} catch (e) {
 			toast.error('Error adding room. Please try again later');
 		}
@@ -150,13 +159,18 @@
 				allocating = false;
 				return;
 			}
-			const res = await allocation(currentRoom.roomCode, detail.values.occupants);
+
+			const res = await allocation(currentRoom.roomCode, [
+				...currentRoom.occupants,
+				detail.values.occupants
+			]);
 			if (res?.success) {
 				toast.success(res.message);
 
 				allocating = false;
 				showAllocationModal = false;
 				await fetchRooms();
+				await fetchResidents();
 			} else {
 				toast.error('An error occurred. Please try again later.');
 				allocating = false;
@@ -169,7 +183,6 @@
 	async function resetAllocation() {
 		resetting = true;
 		try {
-			
 			const res = await removeAllocation(currentRoom.roomCode);
 			if (res?.success) {
 				toast.success(res.message);
@@ -177,6 +190,7 @@
 				resetting = false;
 				showAllocationModal = false;
 				await fetchRooms();
+				await fetchResidents();
 			} else {
 				toast.error('An error occurred. Please try again later.');
 				resetting = false;
@@ -220,10 +234,27 @@
 					sex: r.sex,
 					lastName: r.lastName,
 					label: `${r.firstName} ${r.lastName}`,
-					value: r.residentID
+					value: r.residentId,
+					residentId: r.residentId
 				};
 			});
+
+			const alcs = $roomsStore.map((o: any) => o.occupants);
+
+			const allocatedResidentIds = alcs.flat().map((o: any) => o.residentId);
 			
+			residentOptions = $residentsStore
+				.map((r: any) => ({
+					email: r.email,
+					firstName: r.firstName,
+					sex: r.sex,
+					lastName: r.lastName,
+					label: `${r.firstName} ${r.lastName}`,
+					value: r.residentId,
+					residentId: r.residentId
+				}))
+				.filter((r: any) => !allocatedResidentIds.includes(r.residentId));
+
 			loading = false;
 		} catch (error) {
 			loading = false;
@@ -330,43 +361,53 @@
 
 {#if showAllocationModal}
 	<Modal title="Allocation: Room {currentRoom.roomNumber}" bind:open={showAllocationModal}>
-		{#if loading}
-			<Loader />
+		{#if residentOptions.length === 0 && currentRoom.occupants.length === 0}
+			<div class="text-sm font-semibold text-gray-500 text-center">
+				No residents added yet or all residents have been allocated. Add residents to enable room
+				allocation.
+				<div class="w-full mt-2 flex justify-center">
+					<Button label="Go to Residents" onClick={() => goto('/residents')} />
+				</div>
+			</div>
 		{:else}
-		<DataTable
-			columns={allocationsColumns}
-			bodyData={roomOccupants}
-			loading={fetchingAllocations}
-		/>
-		{/if}
-		{#if currentRoom.occupants.length < currentRoom.numberOfOccupants}
-			<Form schema={allocationSchema} on:submit={allocateRoom}>
-				<FormSelect
-					name="occupants"
-					options={residentOptions}
-					valueAsObject
-					multiple
-					showLabel
-					label="Resident"
+			{#if loading}
+				<Loader />
+			{:else}
+				<DataTable
+					columns={allocationsColumns}
+					bodyData={roomOccupants}
+					loading={fetchingAllocations}
 				/>
-				<div class="w-full flex items-center py-4 justify-center">
+			{/if}
+			{#if currentRoom.occupants.length < currentRoom.numberOfOccupants}
+				<Form schema={allocationSchema} on:submit={allocateRoom}>
+					<FormSelect
+						name="occupants"
+						options={residentOptions}
+						valueAsObject
+						multiple
+						showLabel
+						label="Resident"
+					/>
+					<div class="w-full flex items-center py-4 justify-center">
+						<Button
+							type="submit"
+							label={allocating ? 'Allocating...' : 'Allocate'}
+							disabled={allocating}
+						/>
+					</div>
+				</Form>
+			{:else}
+				<div class="w-full flex justify-center mx-auto align-middle">
 					<Button
-						type="submit"
-						label={allocating ? 'Allocating...' : 'Allocate'}
-						disabled={allocating}
+						label={resetting ? 'Resetting...' : 'Room fully booked. Click to reset allocations'}
+						icon="hugeicons:alert-02"
+						disabled={resetting}
+						onClick={() => resetAllocation()}
+						hasIcon
 					/>
 				</div>
-			</Form>
-		{:else}
-			<div class="w-full flex justify-center mx-auto align-middle">
-				<Button
-					label={resetting ? 'Resetting...' : "Room fully booked. Click to reset allocations"}
-					icon="hugeicons:alert-02"
-					disabled={resetting}
-					onClick={() => resetAllocation()}
-					hasIcon
-				/>
-			</div>
+			{/if}
 		{/if}
 	</Modal>
 {/if}

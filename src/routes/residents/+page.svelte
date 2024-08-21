@@ -11,13 +11,14 @@
 	import toast, { Toaster } from 'svelte-french-toast';
 	import * as yup from 'yup';
 	import pkg from 'lodash';
-	import { P } from 'flowbite-svelte';
+	import { v4 as uuidv4 } from 'uuid';
+	import { roomsStore } from '$lib/services/rooms';
 
-	const {uniqueId} = pkg
+	const { uniqueId } = pkg;
 	let loading = false;
 	let saving = false;
 	let showAddModal = false;
-
+	let residents: any = [];
 	const schema = yup.object().shape({
 		firstName: yup.string().required(),
 		lastName: yup.string().required(),
@@ -59,13 +60,13 @@
 		},
 		// {
 		// 	name: 'Room Number',
-		// 	cell: (row: any) => row.isAllocated ? row.roomNumber : 'Not Allocated',
+		// 	cell: (row: any) => row.isAllocated ? row.room?.roomNumber : 'N/A',
 		// },
-		// {
-		// 	name: 'Status',
-		// 	cell: (row: any) => (row.isActive ? 'Active' : 'Inactive'),
-		// 	cellStyle: (row: any) => (row.isActive ? 'bg-green-100' : 'bg-red-100')
-		// }
+		{
+			name: 'Status',
+			cell: (row: any) => (row.isAllocated ? 'Allocated' : 'Not Allocated'),
+			cellStyle: (row: any) => (row.isAllocated ? 'bg-green-100' : 'bg-gray-100')
+		}
 	];
 
 	async function createResident({ detail }: any) {
@@ -74,7 +75,10 @@
 		try {
 			const res: any = await addResident({
 				...values,
-				residentID: $residentsStore.length ? $residentsStore[$residentsStore.length - 1].residentID + 1 : 1
+				residentCode: `RSD_${uuidv4()}`,
+				residentId: $residentsStore.length
+					? $residentsStore[$residentsStore.length - 1].residentId + 1
+					: 1
 			});
 			if (res.success) {
 				toast.success(res.message);
@@ -97,14 +101,25 @@
 		try {
 			loading = true;
 			await getResidents();
-			console.log($residentsStore);
+			const alcs = $roomsStore.map((o: any) => o.occupants);
+			const allocatedResidentIds = alcs.flat().map((o: any) => o.residentId);
+			const allocated = alcs.map((o: any) => {
+				return { ...o };
+			});
+			console.log({allocated})
+			residents = $residentsStore.map((r: any) => {
+				return {
+					...r,
+					isAllocated: allocatedResidentIds.includes(r.residentId) ? true : false,
+				};
+			});
+
 			loading = false;
 		} catch (error) {
 			loading = false;
 			console.log(error);
 		}
 	}
-	
 
 	onMount(async () => {
 		await fetchResidents();
@@ -113,7 +128,7 @@
 
 <Toaster />
 <div>
-	<DataTable {loading} {columns} bodyData={$residentsStore} />
+	<DataTable {loading} {columns} bodyData={residents} />
 </div>
 
 {#if showAddModal}
@@ -129,7 +144,7 @@
 				</div>
 			</div>
 			<div class="flex justify-center w-full mt-2">
-				<Button type="submit" disabled={saving}  label={saving ? 'Saving...' : "Add Resident"} />
+				<Button type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Resident'} />
 			</div>
 		</Form>
 	</Modal>

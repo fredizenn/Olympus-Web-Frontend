@@ -29,6 +29,7 @@
 		updateStatus
 	} from '$lib/services/maintenance';
 	import FormTextArea from '$lib/components/controls/formTextArea.svelte';
+	import { formatDate } from '$lib/utils/date-formatter';
 
 	// const { uniqueId } = pkg
 	let loading = false;
@@ -40,7 +41,9 @@
 	let modalButtonLabel = '';
 	let modalButtonAction: any;
 	let modalDescription: any;
+	let rooms: any = []
 	let btnIndx: any;
+	let residents: any = []
 	$pageDescription = 'Manage maintenance requests.';
 	$pageActionButtons = [
 		{
@@ -64,19 +67,27 @@
 			cell: (row: any) => row.description
 		},
 		{
-			name: 'Issued By',
-			cell: (row: any) => row.issuedBy
+			name: 'Reported By',
+			cell: (row: any) => row.issuedBy || 'N/A'
+		},
+		{
+			name: 'Room Number',
+			cell: (row: any) => row.room.roomNumber || 'N/A'
+		},
+		{
+			name: 'Date Reported',
+			cell: (row: any) => formatDate(row.createdAt)
 		},
 		{
 			name: 'Status',
 			cell: (row: any) => row.status,
 			cellStyle: (row: any) => {
 				if (row.status === 'Resolved') {
-					return 'rounded py-0.5 bg-green-100';
+					return 'rounded w-full py-0.5 bg-green-100';
 				} else if (row.status === 'Pending') {
-					return 'rounded py-0.5 bg-yellow-100';
+					return 'w-full rounded py-0.5 bg-yellow-100';
 				} else {
-					return 'rounded py-0.5 bg-red-100';
+					return 'w-full rounded py-0.5 bg-red-100';
 				}
 			}
 		}
@@ -86,7 +97,7 @@
 
 	const schema = yup.object().shape({
 		description: yup.string().required().label('Description'),
-		issuedBy: yup.string().required().label('Issued By')
+		// issuedBy: yup.string().required().label('Issued By')
 	});
 
 	async function fetchMaintenanceRequests() {
@@ -107,7 +118,7 @@
 		try {
 			const res = await addMaintenanceRequest({
 				...values,
-				mrCode: `mr_${uuidv4()}`,
+				mrCode: `MTR_${uuidv4()}`,
 				status: 'Pending',
 				createdAt: Date.now()
 			});
@@ -129,6 +140,49 @@
 		} catch (e) {}
 	}
 
+
+	// async function fetchResidents() {
+	// 	try {
+	// 		loading = true;
+	// 		await getResidents();
+	// 		residents = $residentsStore.map((r: any) => {
+	// 			return {
+	// 				email: r.email,
+	// 				firstName: r.firstName,
+	// 				sex: r.sex,
+	// 				lastName: r.lastName,
+	// 				label: `${r.firstName} ${r.lastName}`,
+	// 				value: r.residentId,
+	// 				residentId: r.residentId
+	// 			};
+	// 		});
+
+	
+	// 		loading = false;
+	// 	} catch (error) {
+	// 		loading = false;
+	// 		console.log(error);
+	// 	}
+	// }
+
+	async function fetchRooms() {
+		try {
+			loading = true;
+			await getRooms();
+			rooms = $roomsStore.map((r: any) => {
+				return {
+					...r,
+					label: r.roomNumber,
+					value: r.roomId
+				};
+			})
+			residents = rooms.map((r: any) => r.occupants).flat();
+			loading = false;
+		} catch (error) {
+			loading = false;
+			console.log(error);
+		}
+	}
 	// onMount(async() => {
 	//     console.log("hello")
 	// })
@@ -235,6 +289,8 @@
 
 	onMount(async () => {
 		await fetchMaintenanceRequests();
+		await fetchRooms();
+		// await fetchResidents();
 	});
 </script>
 
@@ -279,8 +335,9 @@
 	<Modal title="Maintenance Request" bind:open={showAddModal}>
 		<Form {schema} on:submit={createMaintenanceRequest}>
 			<div class="space-y-2">
-				<FormInput name="description" showLabel label="Description" required />
+				<FormSelect name="room" valueAsObject options={rooms} showLabel label="Room" required />
 				<FormInput name="issuedBy" showLabel label="Issued By" required />
+				<FormInput name="description" showLabel label="Description" required />
 			</div>
 
 			<div class="w-full flex items-center py-4 justify-center">

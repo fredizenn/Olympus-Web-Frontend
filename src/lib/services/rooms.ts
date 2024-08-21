@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
 	addDoc,
-	arrayUnion,
 	collection,
 	getDocs,
 	query,
@@ -19,7 +18,7 @@ export interface IRoom {
 	occupants: any;
 	currentVacancy?: number;
 }
-export const roomsStore = writable([]);
+export const roomsStore = writable<any>([]);
 
 export const getRooms = async () => {
 	try {
@@ -57,7 +56,7 @@ export const allocation = async (roomCode: string, data: any) => {
 		const querySnapshot: any = await getDocs(q);
 		if (!querySnapshot.empty) {
 			const docRef = querySnapshot.docs[0].ref;
-			await updateDoc(docRef, { occupants: arrayUnion(data[0]) });
+			await updateDoc(docRef, { occupants: data[0] });
 			return {
 				success: true,
 				message: 'Allocation completed.'
