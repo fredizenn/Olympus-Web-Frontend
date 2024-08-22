@@ -18,10 +18,11 @@
 	const dispatch = createEventDispatcher();
 	const { touched, errors, data }: any = getContext(key);
 	
-	function onChange({detail}: any) {
-		dispatch('change', { name, value: $data[name] });
-	}
+	// export function onChange({detail}: any) {
+	// 	dispatch('change', { detail });
+	// }
 
+	export let onChange: (_: any) => void = () => {};
 	// $: hasError = Array.isArray($touched[name] && $errors[name]) ? $touched[name] && $errors[name].length : $touched[name] && $errors[name];
 	// $: hasError =  $touched[name] && $errors[name].length;
 	// $: error = $errors[name]

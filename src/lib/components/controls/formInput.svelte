@@ -46,7 +46,6 @@
 
 	{#if readonly}
 		<Input
-			size="sm"
 			class="w-full rounded border text-sm border-gray-300 px-2 py-1 text-black shadow shadow-gray-50 outline-transparent placeholder:text-gray-500/80 focus:outline-none focus:outline-transparent {otherClasses}"
 			value={$data[name] || ''}
 			{required}

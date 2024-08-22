@@ -7,7 +7,7 @@ import { writable } from "svelte/store";
 export interface IPayment {
 	resident: any;
 	amountPaid: number;
-	roomFee: number;
+	room: any;
 	dateOfPayment: Date;
 }
 
@@ -21,7 +21,7 @@ export const getPayments = async () => {
 			querySnapshot.forEach((doc) => {
 				payments.push({ ...doc.data() });
 			});
-			payments.set(payments);
+			paymentsStore.set(payments);
 		}
 	} catch (error) {
 		console.log(error);
