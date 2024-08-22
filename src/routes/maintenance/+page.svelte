@@ -44,6 +44,8 @@
 	let rooms: any = []
 	let btnIndx: any;
 	let residents: any = []
+	
+	$activePageHeader = 'Maintenance Requests';
 	$pageDescription = 'Manage maintenance requests.';
 	$pageActionButtons = [
 		{

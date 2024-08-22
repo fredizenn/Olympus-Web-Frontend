@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { addPayment, getPayments, paymentsStore } from "$lib/services/payment";
-	import { pageActionButtons, pageDescription } from "$lib/stores/layoutStore";
+	import { activePageHeader, pageActionButtons, pageDescription } from "$lib/stores/layoutStore";
 	import { onMount } from "svelte";
 	import DataTable from '$lib/components/dataTable.svelte';
     import toast, { Toaster } from 'svelte-french-toast';
@@ -15,6 +15,7 @@
 	import { getResidents, residentsStore } from "$lib/services/residents";
 	import { toCurrencyFormat } from "$lib/utils/currency";
 
+    $activePageHeader = 'Residents';
     $pageDescription = "Manage resident fee payments";
     let loading = false
     let loadingResidents = false;
@@ -126,7 +127,7 @@
         try {
             saving = true;
             const { values } = detail;
-            const res = await addPayment(values);
+            const res = await addPayment({...values, paymentId: $paymentsStore.length ? $paymentsStore[$paymentsStore.length - 1].paymentId + 1 : 1});
             if (res?.success) {
                 saving = false;
                 showAddModal = false;
