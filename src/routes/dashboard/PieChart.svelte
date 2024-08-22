@@ -2,6 +2,7 @@
 	import * as echarts from 'echarts';
 	import { onMount } from 'svelte';
     
+	export let pieChartData: any = [];
 	let pieChart: any;
     let chart: echarts.ECharts;
 
@@ -15,7 +16,7 @@
 		},
 		series: [
 			{
-				name: 'Access From',
+				name: 'Number of Residents',
 				type: 'pie',
 				radius: ['40%', '70%'],
 				avoidLabelOverlap: false,
@@ -37,13 +38,7 @@
 				labelLine: {
 					show: false
 				},
-				data: [
-					{ value: 1048, name: 'Search Engine' },
-					{ value: 735, name: 'Direct' },
-					{ value: 580, name: 'Email' },
-					{ value: 484, name: 'Union Ads' },
-					{ value: 300, name: 'Video Ads' }
-				]
+				data: pieChartData.map((d: any) => ({ value: d.number, name: d.name }))
 			}
 		]
 	};

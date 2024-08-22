@@ -11,13 +11,6 @@
 	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import {
-		allocate,
-		allocationsStore,
-		getAllocations,
-		getRoomAllocation,
-		roomAllocationStore
-	} from '$lib/services/allocations';
 	import { getResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
@@ -262,38 +255,6 @@
 		}
 	}
 
-	async function fetchAllocations() {
-		try {
-			fetchingAllocations = true;
-			await getAllocations();
-			console.log($allocationsStore);
-			fetchingAllocations = false;
-		} catch (error) {
-			fetchingAllocations = false;
-			console.log(error);
-		}
-	}
-
-	async function fetchRoomAllocation(roomCode: string) {
-		try {
-			fetchingAllocations = true;
-			await getRoomAllocation(roomCode);
-			console.log({ $roomAllocationStore });
-
-			// x = $roomAllocationStore.map((r: any) => {
-			// 	return {
-			// 		firstName: r.occupants[0].firstName,
-			// 		lastName: r.occupants[0].lastName,
-			// 		email: r.occupants[0].email,
-			// 		sex: r.occupants[0].sex
-			// 	}
-			// })
-
-			fetchingAllocations = false;
-		} catch (e) {
-			toast.error('Error fetching room allocation. Please try again later.');
-		}
-	}
 
 	const addRoomBtns = [
 		{

@@ -11,13 +11,6 @@
 	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import {
-		allocate,
-		allocationsStore,
-		getAllocations,
-		getRoomAllocation,
-		roomAllocationStore
-	} from '$lib/services/allocations';
 	import { getResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
@@ -44,7 +37,7 @@
 	let rooms: any = []
 	let btnIndx: any;
 	let residents: any = []
-	
+
 	$activePageHeader = 'Maintenance Requests';
 	$pageDescription = 'Manage maintenance requests.';
 	$pageActionButtons = [
