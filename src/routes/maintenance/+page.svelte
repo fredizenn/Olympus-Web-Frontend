@@ -46,11 +46,7 @@
 			icon: 'hugeicons:folder-add',
 			onClick: () => (showAddModal = true)
 		}
-		// {
-		// 	label: 'Allocation',
-		// 	icon: 'hugeicons:passport-valid',
-		// 	onClick: () => console.log('allocation')
-		// }
+
 	];
 	const columns = [
 		{
@@ -92,7 +88,6 @@
 
 	const schema = yup.object().shape({
 		description: yup.string().required().label('Description'),
-		// issuedBy: yup.string().required().label('Issued By')
 	});
 
 	async function fetchMaintenanceRequests() {
@@ -136,30 +131,6 @@
 	}
 
 
-	// async function fetchResidents() {
-	// 	try {
-	// 		loading = true;
-	// 		await getResidents();
-	// 		residents = $residentsStore.map((r: any) => {
-	// 			return {
-	// 				email: r.email,
-	// 				firstName: r.firstName,
-	// 				sex: r.sex,
-	// 				lastName: r.lastName,
-	// 				label: `${r.firstName} ${r.lastName}`,
-	// 				value: r.residentId,
-	// 				residentId: r.residentId
-	// 			};
-	// 		});
-
-	
-	// 		loading = false;
-	// 	} catch (error) {
-	// 		loading = false;
-	// 		console.log(error);
-	// 	}
-	// }
-
 	async function fetchRooms() {
 		try {
 			loading = true;
@@ -178,9 +149,6 @@
 			console.log(error);
 		}
 	}
-	// onMount(async() => {
-	//     console.log("hello")
-	// })
 
 	const actionButtons = [
 		{
@@ -242,50 +210,10 @@
 			toast.error(e);
 		}
 	}
-	// async function fetchResidents() {
-	// 	try {
-	// 		loading = true;
-	// 		await getResidents();
-	// 		residentOptions = $residentsStore.map((r: any) => {
-	// 			return {
-	// 				email: r.email,
-	// 				firstName: r.firstName,
-	// 				sex: r.sex,
-	// 				lastName: r.lastName,
-	// 				label: `${r.firstName} ${r.lastName}`,
-	// 				value: r.residentID
-	// 			}
-	// 		})
-	// 		console.log($residentsStore);
-	// 		loading = false;
-	// 	} catch (error) {
-	// 		loading = false;
-	// 		console.log(error);
-	// 	}
-	// }
-
-	const addRoomBtns = [
-		{
-			text: 'Save',
-			type: 'submit',
-			loading: loading,
-			handler: () => {}
-		}
-	];
-
-	const allocationModalBtns = [
-		{
-			text: 'Allocate',
-			type: 'submit',
-			loading: saving,
-			handler: () => {}
-		}
-	];
 
 	onMount(async () => {
 		await fetchMaintenanceRequests();
 		await fetchRooms();
-		// await fetchResidents();
 	});
 </script>
 

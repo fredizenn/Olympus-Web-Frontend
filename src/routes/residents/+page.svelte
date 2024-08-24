@@ -106,7 +106,6 @@
 			const allocated = alcs.map((o: any) => {
 				return { ...o };
 			});
-			console.log({allocated})
 			residents = $residentsStore.map((r: any) => {
 				return {
 					...r,
