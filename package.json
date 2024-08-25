@@ -43,6 +43,7 @@
 		"@felte/reporter-svelte": "^1.1.11",
 		"@felte/validator-yup": "^1.1.3",
 		"@iconify/svelte": "^4.0.2",
+		"@sveltejs/adapter-static": "^3.0.4",
 		"dayjs": "^1.11.12",
 		"echarts": "^5.5.1",
 		"felte": "^1.2.14",
