@@ -13,12 +13,14 @@
 	import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
 	import { roomsStore } from '$lib/services/rooms';
+	import SlideOver from '$lib/components/ui/slideOver.svelte';
 
 	const { uniqueId } = pkg;
 	let loading = false;
 	let saving = false;
 	let showAddModal = false;
 	let residents: any = [];
+
 	const schema = yup.object().shape({
 		firstName: yup.string().required(),
 		lastName: yup.string().required(),
@@ -129,7 +131,7 @@
 <div>
 	<DataTable {loading} {columns} bodyData={residents} />
 </div>
-
+<!-- 
 {#if showAddModal}
 	<Modal title="Add Resident" bind:open={showAddModal}>
 		<Form {schema} on:submit={createResident}>
@@ -147,4 +149,22 @@
 			</div>
 		</Form>
 	</Modal>
-{/if}
+{/if} -->
+
+
+<SlideOver title="Resident Registration" show={showAddModal} onClose={() => (showAddModal = false)}>
+	<Form {schema} on:submit={createResident}>
+		<div class="md:grid grid-cols-2 gap-4">
+			<FormInput name="firstName" required showLabel label="First Name" />
+			<FormInput name="lastName" required showLabel label="Last Name" />
+			<FormInput name="email" required showLabel label="Email" />
+
+			<div class="h-full">
+				<FormSelect options={sexes} name="sex" required showLabel label="Sex" />
+			</div>
+		</div>
+		<div class="flex justify-center w-full mt-2">
+			<Button type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Resident'} />
+		</div>
+	</Form>
+</SlideOver>

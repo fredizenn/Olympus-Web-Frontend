@@ -65,8 +65,8 @@
 >
 	<SidebarWrapper divClass=" h-full py-2">
 		<SidebarGroup ulClass="space-y-3 ">
-			<div class="py-6 font-semibold text-xs text-center">
-				Hostel Management System
+			<div class="py-6 font-semibold tracking-wider text-xl text-center">
+				OLYMPUS
 			</div>
 			<!-- <SidebarBrand
 				{site}

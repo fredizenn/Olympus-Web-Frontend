@@ -10,7 +10,7 @@ import Nav from '$lib/components/nav.svelte';
   let menus: IMenu[] = [
     {
       label: 'Home',
-      path: '/',
+      path: '/dashboard',
       icon: 'hugeicons:home-06',
       iconColor: 'text-[#005C31]'
     },
@@ -61,7 +61,7 @@ import Nav from '$lib/components/nav.svelte';
           <div class="flex space-x-2">
             {#each $pageActionButtons as btn}
             <!-- <div> -->
-              <Button label={btn.label} icon={btn.icon} onClick={btn.onClick} />
+              <Button  label={btn.label} icon={btn.icon} onClick={btn.onClick} />
             <!-- </div> -->
              {/each}
           </div>
