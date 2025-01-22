@@ -16,7 +16,7 @@
 <Button
 	{type}
 	{disabled}
-	class="rounded flex bg-indigo-600 items-center focus:ring-2 focus:ring-bg-indigo-400 py-1 text-xs capitalize {otherClasses}"
+	class="rounded flex bg-black items-center focus:ring-2 focus:ring-bg-indigo-400 py-1 text-xs capitalize {otherClasses}"
 	on:click={onClick}
 >
 	<Icon {icon} class="h-4 w-4 mr-1" />

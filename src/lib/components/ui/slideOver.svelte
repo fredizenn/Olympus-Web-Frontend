@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { residentFormStep } from "$lib/stores/layoutStore";
 	import Icon from "@iconify/svelte";
     import { fly } from "svelte/transition";
     export let title = "Panel title";  // Title of the slide-over panel
@@ -9,13 +10,14 @@
     // Close the panel when clicking outside
     function closePanel() {
       if (onClose) onClose();
+      residentFormStep.set(0);
     }
   </script>
   
   {#if show}
     <div class="relative z-40" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
       <!-- Background backdrop -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" on:click={closePanel}></div>
+      <button type="button" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" on:click={closePanel} aria-label="Close panel" on:keydown={(e) => e.key === 'Enter' && closePanel()}></button>
   
       <div class="fixed inset-0 overflow-hidden">
         <div class="absolute inset-0 overflow-hidden">

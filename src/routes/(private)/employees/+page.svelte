@@ -91,7 +91,9 @@
 			const { values } = detail;
 			const res = await addEmployee({
 				...values,
-				employeeId: $employeesStore.length ? $employeesStore[$employeesStore.length - 1].employeeId + 1 : 1
+				employeeId: $employeesStore.length
+					? $employeesStore[$employeesStore.length - 1].employeeId + 1
+					: 1
 			});
 			if (res?.success) {
 				saving = false;
@@ -245,12 +247,14 @@
 {/if}
 {#if showDeleteModal}
 	<Modal title="Delete Employee: {currentEmployeeName}" bind:open={showDeleteModal}>
-        <div class="text-center text-xs text-red-700 font-semibold">Are you sure you want to delete this employee?</div>
+		<div class="text-center text-xs text-red-700 font-semibold">
+			Are you sure you want to delete this employee?
+		</div>
 		<div class="flex justify-center w-full mt-2">
 			<Button
 				onClick={deleteEmpl}
 				disabled={deleting}
-                otherClasses="bg-red-700 text-white hover:bg-red-800"
+				otherClasses="bg-red-700 text-white hover:bg-red-800"
 				label={deleting ? 'Please wait...' : 'Proceed to Delete Employee'}
 			/>
 		</div>

@@ -1,43 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { browser } from "$app/environment";
-import { addDoc, collection, getDocs } from "firebase/firestore";
-import { hmSysDb } from "./server";
+import { apiErrorHandler } from "$lib/utils/helpers";
 import { writable } from "svelte/store";
+import { client } from ".";
 
 export interface IPayment {
-	resident: any;
+	residentID: any;
+	allocationID: any;
+	paymentDate: Date;
+	amount: number;
 	amountPaid: number;
-	room: any;
-	dateOfPayment: Date;
+	balanceDue: number;
 }
 
 export const paymentsStore = writable<any>([]);
 
 export const getPayments = async () => {
 	try {
-		if (browser) {
-			const querySnapshot = await getDocs(collection(hmSysDb, 'payments'));
-			const payments: any = [];
-			querySnapshot.forEach((doc) => {
-				payments.push({ ...doc.data() });
-			});
-			paymentsStore.set(payments);
-		}
+		const ret = await client.get('/payments');
+		return ret.data;
 	} catch (error) {
-		console.log(error);
+		apiErrorHandler(error);
 	}
 };
 
 export const addPayment = async (data: IPayment) => {
 	try {
-		await addDoc(collection(hmSysDb, 'payments'), data);
-		return {
-			success: true,
-			message: 'Payment added successfully.'
-		};
-	} catch (e) {
-		return {
-			message: e
-		};
+		const ret = await client.post('/payments', data);
+		return ret.data;
+	} catch (error) {
+		apiErrorHandler(error);
 	}
 };

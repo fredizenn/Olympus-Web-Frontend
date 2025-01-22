@@ -26,13 +26,12 @@
 
 	$: activeUrl = $page.url.pathname;
 
-	let activeClass = 'bg-indigo-100 text-indigo-600 group font-bold flex';
-	let nonActiveClass = 'hover:bg-indigo-50 text-gray-600';
+	let activeClass = 'bg-gray-700 text-gray-200 group font-bold flex';
+	let nonActiveClass = 'hover:bg-gray-50 text-gray-600';
 
 	$: if (isActivePage) {
 		let splitResult: any = isActivePage?.split('/');
 
-		console.log({splitResult})
 		if ((splitResult?.length ?? 0) > 2) {
 			isActivePage = `/${splitResult[1]}`;
 		}
@@ -41,8 +40,6 @@
 		// 	isActivePage = `/${splitResult[1]}/`;
 		// }
 	}
-
-	$: console.log({isActivePage})
 
 	$: if (activeUrl) {
 		let splitResult: any = activeUrl?.split('/');
@@ -65,8 +62,8 @@
 >
 	<SidebarWrapper divClass=" h-full py-2">
 		<SidebarGroup ulClass="space-y-3 ">
-			<div class="py-6 font-semibold tracking-wider text-xl text-center">
-				OLYMPUS
+			<div class="py-6 font-semibold  tracking-tight text-xl text-center">
+				ShelterSync
 			</div>
 			<!-- <SidebarBrand
 				{site}
@@ -81,13 +78,13 @@
 						<SidebarItem
 							href={path}
 							{label}
-							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-2 pl-8 text-xs font-medium transition delay-100 duration-200 ease-in-out hover:-translate-y-1 hover:scale-100"
+							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-2 pl-8 text-xs font-medium"
 						>
 							<svelte:fragment slot="icon">
 								<Icon
 									{icon}
 									style="font-size: 18px"
-									class={path === isActivePage ? 'text-indigo-600' : 'text-gray-600 text-opacity-80'}
+									class={path === activeUrl ? 'text-gray-200' : 'text-gray-600 text-opacity-80'}
 								/>
 							</svelte:fragment>
 						</SidebarItem>

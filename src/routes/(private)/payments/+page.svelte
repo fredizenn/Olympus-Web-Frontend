@@ -12,7 +12,7 @@
 	import FormSelect from "$lib/components/controls/formSelect.svelte";
 	import Button from "$lib/components/button.svelte";
 	import { getRooms, roomsStore } from "$lib/services/rooms";
-	import { getResidents, residentsStore } from "$lib/services/residents";
+	import { getResidents } from "$lib/services/residents";
 	import { toCurrencyFormat } from "$lib/utils/currency";
 
     $activePageHeader = 'Residents';
@@ -38,7 +38,7 @@
 
     $pageActionButtons = [
 		{
-			label: 'Add',
+			label: 'Add Payment',
 			icon: 'hugeicons:folder-add',
 			onClick: () => (showAddModal = true)
 		}
@@ -103,23 +103,16 @@
     async function fetchResidents() {
 		try {
 			loadingResidents = true;
-			await getResidents();
-			residentOptions = $residentsStore.map((r: any) => {
-				return {
-					email: r.email,
-					firstName: r.firstName,
-					sex: r.sex,
-					lastName: r.lastName,
-					label: `${r.firstName} ${r.lastName}`,
-					value: r.residentId,
-					residentId: r.residentId
-				};
-			});
+			const res = await getResidents();
+			if(res.isSuccess) {
 
-			loadingResidents = false;
+            } else {
+                toast.error(res.message)
+                loadingResidents = false;
+            }
 		} catch (error) {
 			loading = false;
-			console.log(error);
+            toast.error(String(error));
 		}
 	}
 

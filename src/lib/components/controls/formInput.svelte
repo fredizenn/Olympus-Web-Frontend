@@ -27,14 +27,13 @@
 
 	$: hasError = $touched[name] && $errors[name]?.length;
 	$: error = $errors[name]?.join(', ');
-	
 </script>
 
-<div class="form-control">
+<div class="">
 	<!-- <label class="flex" for={id}> -->
-	<span class="text-sm flex">
+	<span class="text-sm space-x-1 flex">
 		{#if showLabel}
-			<div class="pb-1 text-gray-400">
+			<div class="pb-1 font-medium text-xs text-gray-600">
 				{label}
 			</div>
 		{/if}
@@ -45,8 +44,8 @@
 	<!-- </label> -->
 
 	{#if readonly}
-		<Input
-			class="w-full rounded border text-sm border-gray-300 px-2 py-1 text-black shadow shadow-gray-50 outline-transparent placeholder:text-gray-500/80 focus:outline-none focus:outline-transparent {otherClasses}"
+		<input
+			class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 {otherClasses}"
 			value={$data[name] || ''}
 			{required}
 			{readonly}
@@ -57,7 +56,7 @@
 		/>
 	{:else}
 		<input
-			class="w-full rounded border border-gray-300 px-3 py-2 text-black shadow shadow-gray-50 outline-transparent placeholder:text-gray-500/80 focus:outline-none focus:outline-transparent {otherClasses}"
+			class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6 {otherClasses}"
 			{name}
 			{required}
 			{readonly}

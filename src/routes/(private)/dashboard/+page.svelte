@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { getResidents, residentsStore } from '$lib/services/residents';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import BarChart from './barChart.svelte';
 	import PieChart from './PieChart.svelte';
-	import { getMaintenanceRequests, maintenanceRequestsStore } from '$lib/services/maintenance';
 	import Icon from '@iconify/svelte';
-	import { getPayments, paymentsStore } from '$lib/services/payment';
 	import { toCurrencyFormat } from '$lib/utils/currency';
 	import Loader from '$lib/components/loader.svelte';
 
@@ -22,64 +19,14 @@
 	let cancelledMaintenanceRequests = 0;
 	let resolvedMaintenanceRequests = 0;
 	let pendingMaintenanceRequests = 0;
-	let pieChartData: any[];
+	let pieChartData: any[] = [];
 	// ]
 
-	async function fetchResidents() {
-		try {
-			loadingResidents = true;
-			await getResidents();
-			numberOfResidents = $residentsStore.length;
-			pieChartData = [
-				{ number: $residentsStore.filter((r: any) => r.sex === 'Female').length, name: 'Female' },
-				{ number: $residentsStore.filter((r: any) => r.sex === 'Male').length, name: 'Male' }
-			];
-			console.log({ pieChartData }, { numberOfResidents });
-			loadingResidents = false;
-		} catch (error) {
-			loadingResidents = false;
-			console.log(error);
-		}
-	}
+	
 
-
-	async function fetchPayments() {
-        loadingPayments = true
-        try {
-            await getPayments();
-			totalPayments = $paymentsStore.reduce((a: any, b: any) => a + b.amountPaid, 0)
-            loadingPayments = false;    
-        } catch (error) {
-            loadingPayments = false;
-            console.log(error);
-        }
-    }
-
-	async function fetchMaintenanceRequests() {
-		try {
-			loadingMaintenanceRequests = true;
-			await getMaintenanceRequests();
-			pendingMaintenanceRequests = $maintenanceRequestsStore.filter(
-				(r: any) => r.status === 'Pending'
-			).length;
-			resolvedMaintenanceRequests = $maintenanceRequestsStore.filter(
-				(r: any) => r.status === 'Resolved'
-			).length;
-			cancelledMaintenanceRequests = $maintenanceRequestsStore.filter(
-				(r: any) => r.status === 'Cancelled'
-			).length;
-			loadingMaintenanceRequests = false;
-		} catch (error) {
-			loadingMaintenanceRequests = false;
-			console.log(error);
-		}
-	}
-
-	onMount(async () => {
-		await fetchResidents();
-		await fetchMaintenanceRequests();
-		await fetchPayments();
-	});
+	// onMount(async () => {
+		
+	// });
 </script>
 
 <div class="h-[90%] w-full md:grid grid-cols-2 gap-4">
