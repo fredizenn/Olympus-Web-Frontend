@@ -5,7 +5,7 @@
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { getResidents, residentsStore } from '$lib/services/residents';
+	import { getResidents, residentsStore, type IResident } from '$lib/services/residents';
 	import { activePageHeader, pageActionButtons, pageDescription, residentFormStep } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
@@ -16,13 +16,15 @@
 	import SlideOver from '$lib/components/ui/slideOver.svelte';
 	import Personal from './forms/personal.svelte';
 	import Nok from './forms/nok.svelte';
+	import Institution from './forms/institution.svelte';
+	import Summary from './forms/summary.svelte';
 
 	const { uniqueId } = pkg;
 	let loading = false;
 	let saving = false;
 	let showAddModal = false;
 	let residents: any = [];
-
+	let data: IResident = {} as IResident;
 	const schema = yup.object().shape({
 		firstName: yup.string().required(),
 		lastName: yup.string().required(),
@@ -101,6 +103,7 @@
 		// }
 	}
 
+
 	async function fetchResidents() {
 		try {
 			loading = true;
@@ -118,6 +121,14 @@
 			loading = false;
 			toast.error(String(error));
 		}
+	}
+
+	function onFormChange({ detail }: any) {
+		console.log(detail);
+		data = {
+			...detail.values
+		}
+		console.log({data})
 	}
 
 	onMount(async () => {
@@ -152,28 +163,13 @@
 
 <SlideOver title="Resident Registration" show={showAddModal} onClose={() => (showAddModal = false)}>
 	{#if $residentFormStep === 0}
-	<Personal />
+	<Personal {data} on:submit={onFormChange} />
 	{:else if $residentFormStep === 1}
-	<Nok />
+	<Nok {data} on:submit={onFormChange}  />
+	{:else if $residentFormStep === 2}
+	<Institution on:submit={onFormChange} {data}/>
 	{:else}
-	<div></div>
+	<Summary {data} />
 	{/if}
-	<!-- <Form {schema} on:submit={createResident}>
-		<div class="md:grid grid-cols-2 gap-4">
-			<FormInput name="firstName" required showLabel label="First Name" />
-			<FormInput name="lastName" required showLabel label="Last Name" />
-			<FormInput name="email" required showLabel label="Email" />
-			<FormInput name="phoneNumber" required showLabel label="Phone Number" />
-			<FormInput name="address" required showLabel label="Address" />
-			<FormInput name="nextOfKin" required showLabel label="Next of Kin" />
-
-			<div class="h-full">
-				<FormSelect options={sexes} name="sex" required showLabel label="Sex" />
-			</div>
-		</div>
-		
-		<div class="flex justify-center w-full mt-2">
-			<Button otherClasses="w-full p-2" type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Resident'} />
-		</div>
-	</Form> -->
+	
 </SlideOver>

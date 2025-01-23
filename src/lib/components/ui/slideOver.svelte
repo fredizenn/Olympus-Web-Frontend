@@ -39,7 +39,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="relative mt-6 flex-1 px-4 sm:px-6">
+                <div class="relative mt-6 overflow-auto flex-1 px-4 sm:px-6">
                   <slot></slot> <!-- Slot for custom content -->
                 </div>
               </div>

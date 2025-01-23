@@ -10,8 +10,18 @@ export interface IResident {
     lastName: string,
     email: string,
     sex: string,
+    dateOfBirth: Date,
     phoneNumber: string,
     roomNumber?: string,
+    nextOfKinFullName: string,
+    nextOfKinPhoneNumber: string,
+    nextOfKinEmail: string,
+    nextOfKinAddress: string,
+    nextOfKinRelationship: string,
+    institutionOfStudy: string,
+    programmeOfStudy: string,
+    studyStartDate: any,
+    expectedStudyEndDate: any,
 }
 // export const getResidents = async () => {
 // 	try {
@@ -30,7 +40,7 @@ export interface IResident {
 
 export async function getResidents () {
 	try {
-		const response = await client.get('residents');
+		const response = await client.get('/residents');
 		return response.data;
 	} catch (error) {
 		apiErrorHandler(error);
