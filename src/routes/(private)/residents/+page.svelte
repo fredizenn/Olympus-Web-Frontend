@@ -1,13 +1,18 @@
 <script lang="ts">
-	import Button from '$lib/components/button.svelte';
+	import ActionButton from '$lib/components/button.svelte';
 	import Form from '$lib/components/controls/form.svelte';
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { getResidents, residentsStore, type IResident } from '$lib/services/residents';
-	import { activePageHeader, pageActionButtons, pageDescription, residentFormStep } from '$lib/stores/layoutStore';
-	import { onMount } from 'svelte';
+	import { getResidents, residentInit, residentsStore, type IResident } from '$lib/services/residents';
+	import {
+		activePageHeader,
+		pageActionButtons,
+		pageDescription,
+		residentFormStep
+	} from '$lib/stores/layoutStore';
+	import { onDestroy, onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
 	import * as yup from 'yup';
 	import pkg from 'lodash';
@@ -18,6 +23,7 @@
 	import Nok from './forms/nok.svelte';
 	import Institution from './forms/institution.svelte';
 	import Summary from './forms/summary.svelte';
+	import { Button } from 'flowbite-svelte';
 
 	const { uniqueId } = pkg;
 	let loading = false;
@@ -103,7 +109,6 @@
 		// }
 	}
 
-
 	async function fetchResidents() {
 		try {
 			loading = true;
@@ -111,12 +116,10 @@
 			if (res.isSuccess) {
 				residents = res.data;
 				loading = false;
-
 			} else {
 				loading = false;
 				toast.error(res.message);
 			}
-			// const alcs = $roomsStore.map((o: any) => o.occupants);
 		} catch (error) {
 			loading = false;
 			toast.error(String(error));
@@ -124,15 +127,18 @@
 	}
 
 	function onFormChange({ detail }: any) {
-		console.log(detail);
 		data = {
 			...detail.values
-		}
-		console.log({data})
+		};
 	}
 
 	onMount(async () => {
 		await fetchResidents();
+	});
+
+	onDestroy(() => {
+		residentFormStep.set(0);
+		data = {} as IResident;
 	});
 </script>
 
@@ -160,16 +166,27 @@
 	</Modal>
 {/if} -->
 
-
-<SlideOver title="Resident Registration" show={showAddModal} onClose={() => (showAddModal = false)}>
+<SlideOver title="Resident Registration" show={showAddModal} onClose={() => {(showAddModal = false); data={ ...residentInit, }} }>
 	{#if $residentFormStep === 0}
-	<Personal {data} on:submit={onFormChange} />
+		<Personal {data} on:submit={onFormChange} />
 	{:else if $residentFormStep === 1}
-	<Nok {data} on:submit={onFormChange}  />
+		<div class="w-full flex justify-end">
+			<button
+				class="flex justify-end items-center gap-2 py-1 text-sm"
+				on:click={() => residentFormStep.set(0)}>&larr; Back</button
+			>
+		</div>
+		<Nok {data} on:submit={onFormChange} />
 	{:else if $residentFormStep === 2}
-	<Institution on:submit={onFormChange} {data}/>
+	<div class="w-full flex justify-end">
+		<button
+			class="flex justify-end items-center gap-2 py-1 text-sm"
+			on:click={() => residentFormStep.set(1)}>&larr; Back</button
+		>
+	</div>
+		<Institution on:submit={onFormChange} {data} />
 	{:else}
-	<Summary {data} />
-	{/if}
 	
+		<Summary {data} />
+	{/if}
 </SlideOver>

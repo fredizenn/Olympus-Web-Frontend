@@ -39,7 +39,7 @@
         </div>
 	</div>
 	<div class="flex justify-end mt-4">
-		<Button otherClasses="w-full p-3" type="submit" label={'Next'} />
+		<Button otherClasses="w-full p-3 bg-green-600" type="submit" label={'Save and continue'} />
 	</div>
 	<!-- <div class="flex justify-center w-full mt-2">
         <Button otherClasses="w-full p-2" type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Resident'} />

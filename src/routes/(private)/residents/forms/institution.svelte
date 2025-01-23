@@ -23,18 +23,12 @@
 	});
 
 	function submit({ detail }: any) { 
-        skip ? detail = { ...detail.values, institutionOfStudy: '', programmeOfStudy: '', studyStartDate: '', expectedStudyEndDate: ''} : detail;
+        // skip ? detail = { ...detail.values, institutionOfStudy: '', programmeOfStudy: '', studyStartDate: '', expectedStudyEndDate: ''} : detail;
         
 		dispatcher('submit', detail);
 		residentFormStep.set(3);
-        skip = false;
+        // skip = false;
 	}
-
-    function altSubmit({ detail }: any) {
-        dispatcher('submit', detail);
-        residentFormStep.set(3);
-    }
-
    
 </script>
 
@@ -42,24 +36,23 @@
 	<div class="text-xs font-semibold text-gray-400 text-center pb-6">Institution of Study</div>
 	<div class="md:grid grid-cols-2 gap-4">
 		<div class="col-span-2">
-			<FormInput name="institutionOfStudy" required showLabel label="Institution Name" />
+			<FormInput name="institutionOfStudy" showLabel label="Institution Name" />
 		</div>
 		<div class="col-span-2">
-			<FormInput name="programmeOfStudy" required showLabel label="Programme of Study" />
+			<FormInput name="programmeOfStudy" showLabel label="Programme of Study" />
 		</div>
-		<FormInput name="studyStartDate" type="date" required showLabel label="Start Date" />
+		<FormInput name="studyStartDate" type="date" showLabel label="Start Date" />
 		<FormInput
 			name="expectedStudyEndDate"
 			type="date"
-			required
 			showLabel
 			label="Expected End Date"
 		/>
 	</div>
 	<div class="flex justify-end gap-4 mt-4">
-        <Button otherClasses="w-1/3 p-3" type="submit"  label={'Skip'} />
+        <!-- <Button otherClasses="w-1/3 p-3" type="submit" onClick={() => skip = true}  label={'Skip'} /> -->
 
-		<Button otherClasses="w-full p-3 bg-green-600" type="submit" label={'Save and submit'} />
+		<Button otherClasses="w-full p-3 bg-green-600" type="submit" label={'Save and continue'} />
 	</div>
 	<!-- <div class="flex justify-center w-full mt-2">
         <Button otherClasses="w-full p-2" type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Resident'} />

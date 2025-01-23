@@ -10,9 +10,8 @@ export interface IResident {
     lastName: string,
     email: string,
     sex: string,
-    dateOfBirth: Date,
+    dateOfBirth: any,
     phoneNumber: string,
-    roomNumber?: string,
     nextOfKinFullName: string,
     nextOfKinPhoneNumber: string,
     nextOfKinEmail: string,
@@ -22,6 +21,25 @@ export interface IResident {
     programmeOfStudy: string,
     studyStartDate: any,
     expectedStudyEndDate: any,
+}
+
+export const residentInit: IResident = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    sex: '',
+    dateOfBirth: null,
+    phoneNumber: '',
+    nextOfKinFullName: '',
+    nextOfKinPhoneNumber: '',
+    nextOfKinEmail: '',
+    nextOfKinAddress: '',
+    nextOfKinRelationship: '',
+    institutionOfStudy: '',
+    programmeOfStudy: '',
+    studyStartDate: null,
+    expectedStudyEndDate: null,
+
 }
 // export const getResidents = async () => {
 // 	try {
