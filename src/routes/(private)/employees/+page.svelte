@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { addPayment, getPayments, paymentsStore } from '$lib/services/payment';
+	import { AddPayment, GetPayments, paymentsStore } from '$lib/services/payment';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
@@ -14,10 +14,8 @@
 	import { toCurrencyFormat } from '$lib/utils/currency';
 	import {
 		addEmployee,
-		deleteEmployee,
 		employeesStore,
 		getEmployees,
-		updateEmployee
 	} from '$lib/services/employees';
 
 	$activePageHeader = 'Employees';
@@ -59,7 +57,7 @@
 		},
 		{
 			name: 'Email',
-			cell: (row: any) => row.email
+			cell: (row: any) => row.emailAddress
 		},
 		{
 			name: 'Phone Number',
@@ -110,43 +108,43 @@
 	}
 
 	async function deleteEmpl() {
-		try {
-			deleting = true;
-			const res: any = await deleteEmployee(currentEmployeeId);
-			if (res.success) {
-				deleting = false;
-				showDeleteModal = false;
-				toast.success(res.message);
-				await fetchEmployees();
-			} else {
-				deleting = false;
-				showDeleteModal = false;
-				toast.error(res.message);
-			}
-		} catch (error: any) {
-			deleting = false;
-			showDeleteModal = false;
-			toast.error(error);
-		}
+		// try {
+		// 	deleting = true;
+		// 	const res: any = await deleteEmployee(currentEmployeeId);
+		// 	if (res.success) {
+		// 		deleting = false;
+		// 		showDeleteModal = false;
+		// 		toast.success(res.message);
+		// 		await fetchEmployees();
+		// 	} else {
+		// 		deleting = false;
+		// 		showDeleteModal = false;
+		// 		toast.error(res.message);
+		// 	}
+		// } catch (error: any) {
+		// 	deleting = false;
+		// 	showDeleteModal = false;
+		// 	toast.error(error);
+		// }
 	}
 
 	async function editEmployee({ detail }: any) {
-		try {
-			saving = true;
-			const { values } = detail;
-			const res = await updateEmployee(values.employeeId, values);
-			if (res?.success) {
-				saving = false;
-				showEditModal = false;
-				await fetchEmployees();
-				toast.success(res.message);
-			} else {
-				saving = false;
-				toast.error('An error occurred');
-			}
-		} catch (error) {
-			console.log(error);
-		}
+		// try {
+		// 	saving = true;
+		// 	const { values } = detail;
+		// 	const res = await updateEmployee(values.employeeId, values);
+		// 	if (res?.success) {
+		// 		saving = false;
+		// 		showEditModal = false;
+		// 		await fetchEmployees();
+		// 		toast.success(res.message);
+		// 	} else {
+		// 		saving = false;
+		// 		toast.error('An error occurred');
+		// 	}
+		// } catch (error) {
+		// 	console.log(error);
+		// }
 	}
 
 	onMount(async () => {

@@ -11,7 +11,7 @@
 	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import { getResidents, residentsStore } from '$lib/services/residents';
+	import { GetResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import { toCurrencyFormat } from '$lib/utils/currency';
@@ -19,7 +19,6 @@
 		addMaintenanceRequest,
 		getMaintenanceRequests,
 		maintenanceRequestsStore,
-		updateStatus
 	} from '$lib/services/maintenance';
 	import FormTextArea from '$lib/components/controls/formTextArea.svelte';
 	import { formatDate } from '$lib/utils/date-formatter';

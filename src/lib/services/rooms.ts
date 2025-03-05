@@ -23,10 +23,9 @@ export const getRooms = async () => {
 
 export const addRoom = async (data: IRoom) => {
 	try {
-		const ret = await client.post('/rooms', data);
+		const ret = await client.post('/rooms', { ...data });
 		return ret.data;
 	} catch (error) {
 		apiErrorHandler(error);
 	}
 };
-

@@ -4,14 +4,14 @@
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import Loader from '$lib/components/loader.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { addRoom, allocation, getRooms, removeAllocation, roomsStore } from '$lib/services/rooms';
+	import { addRoom, getRooms, roomsStore } from '$lib/services/rooms';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
 	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import { getResidents, residentsStore } from '$lib/services/residents';
+	import { GetResidents, residentsStore } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import { toCurrencyFormat } from '$lib/utils/currency';
@@ -153,46 +153,46 @@
 				return;
 			}
 
-			const res = await allocation(currentRoom.roomCode, [
-				...currentRoom.occupants,
-				detail.values.occupants
-			]);
-			if (res?.success) {
-				toast.success(res.message);
+			// const res = await allocation(currentRoom.roomCode, [
+			// 	...currentRoom.occupants,
+			// 	detail.values.occupants
+			// ]);
+			// if (res?.success) {
+			// 	toast.success(res.message);
 
-				allocating = false;
-				showAllocationModal = false;
-				await fetchRooms();
-				await fetchResidents();
-			} else {
-				toast.error('An error occurred. Please try again later.');
-				allocating = false;
-			}
+			// 	allocating = false;
+			// 	showAllocationModal = false;
+			// 	await fetchRooms();
+			// 	await fetchResidents();
+			// } else {
+			// 	toast.error('An error occurred. Please try again later.');
+			// 	allocating = false;
+			// }
 		} catch (e) {
 			console.log(e);
 		}
 	}
 
-	async function resetAllocation() {
-		resetting = true;
-		try {
-			const res = await removeAllocation(currentRoom.roomCode);
-			if (res?.success) {
-				toast.success(res.message);
-				roomOccupants = [];
-				resetting = false;
-				showAllocationModal = false;
-				await fetchRooms();
-				await fetchResidents();
-			} else {
-				toast.error('An error occurred. Please try again later.');
-				resetting = false;
-			}
-		} catch (e) {
-			resetting = false;
-			console.log(e);
-		}
-	}
+	// async function resetAllocation() {
+	// 	resetting = true;
+	// 	try {
+	// 		const res = await removeAllocation(currentRoom.roomCode);
+	// 		if (res?.success) {
+	// 			toast.success(res.message);
+	// 			roomOccupants = [];
+	// 			resetting = false;
+	// 			showAllocationModal = false;
+	// 			await fetchRooms();
+	// 			await fetchResidents();
+	// 		} else {
+	// 			toast.error('An error occurred. Please try again later.');
+	// 			resetting = false;
+	// 		}
+	// 	} catch (e) {
+	// 		resetting = false;
+	// 		console.log(e);
+	// 	}
+	// }
 	// onMount(async() => {
 	//     console.log("hello")
 	// })
@@ -219,7 +219,7 @@
 	async function fetchResidents() {
 		try {
 			loading = true;
-			await getResidents();
+			await GetResidents();
 			residentOptions = $residentsStore.map((r: any) => {
 				return {
 					email: r.email,
@@ -364,7 +364,6 @@
 						label={resetting ? 'Resetting...' : 'Room fully booked. Click to reset allocations'}
 						icon="hugeicons:alert-02"
 						disabled={resetting}
-						onClick={() => resetAllocation()}
 						hasIcon
 					/>
 				</div>

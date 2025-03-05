@@ -29,7 +29,7 @@
 	// });
 </script>
 
-<div class="h-[90%] w-full md:grid grid-cols-2 gap-4">
+<!-- <div class="h-[90%] w-full md:grid grid-cols-2 gap-4">
 	<div class="p-2 shadow text-center flex flex-col rounded">
 		<div class="font-semibold text-gray-500 pt-4">Total Number of Residents</div>
 		<div class="flex h-full text-7xl font-semibold items-center justify-center">
@@ -78,4 +78,4 @@
 		</div>
 		{/if}
 	</div>
-</div>
+</div> -->

@@ -5,7 +5,7 @@
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { getResidents, residentInit, residentsStore, type IResident } from '$lib/services/residents';
+	import { AddResident, GetResidents, residentInit, residentsStore, type IResident } from '$lib/services/residents';
 	import {
 		activePageHeader,
 		pageActionButtons,
@@ -29,6 +29,7 @@
 	let loading = false;
 	let saving = false;
 	let showAddModal = false;
+	let isComplete = false;
 	let residents: any = [];
 	let data: IResident = {} as IResident;
 	const schema = yup.object().shape({
@@ -70,6 +71,10 @@
 			name: 'Sex',
 			cell: (row: any) => row.sex
 		},
+		{
+			name: 'Resident Number',
+			cell: (row: any) => row.residentNumber
+		},
 		// {
 		// 	name: 'Room Number',
 		// 	cell: (row: any) => row.isAllocated ? row.room?.roomNumber : 'N/A',
@@ -77,7 +82,7 @@
 		{
 			name: 'Status',
 			cell: (row: any) => (row.isAllocated ? 'Allocated' : 'Not Allocated'),
-			cellStyle: (row: any) => (row.isAllocated ? 'bg-green-100' : 'bg-gray-100')
+			cellStyle: (row: any) => (row.isAllocated ? 'bg-green-100 w-full' : 'bg-gray-100 w-full')
 		}
 	];
 
@@ -109,10 +114,30 @@
 		// }
 	}
 
+	async function completeRegistration() {
+		try {
+			saving = true;
+			const res = await AddResident(data);
+			if(res.isSuccess) {
+				saving = false;
+				isComplete = true;
+				await fetchResidents();
+				toast.success(res.message);
+				// showAddModal = false
+			} else {
+				toast.error(res.message);
+				saving = false;
+			}
+		} catch (error) {
+			saving = false;
+			toast.error(String(error));
+		}
+	}
+
 	async function fetchResidents() {
 		try {
 			loading = true;
-			const res = await getResidents();
+			const res = await GetResidents();
 			if (res.isSuccess) {
 				residents = res.data;
 				loading = false;
@@ -187,6 +212,6 @@
 		<Institution on:submit={onFormChange} {data} />
 	{:else}
 	
-		<Summary {data} />
+		<Summary {completeRegistration} loading={saving} {isComplete} {data} />
 	{/if}
 </SlideOver>

@@ -26,8 +26,8 @@
 
 	$: activeUrl = $page.url.pathname;
 
-	let activeClass = 'bg-gray-700 text-gray-200 group font-bold flex';
-	let nonActiveClass = 'hover:bg-gray-50 text-gray-600';
+	let activeClass = 'bg-indigo-200 text-indigo-900 group font-bold flex';
+	let nonActiveClass = 'hover:bg-gray-50 text-gray-500 font-medium';
 
 	$: if (isActivePage) {
 		let splitResult: any = isActivePage?.split('/');
@@ -78,13 +78,13 @@
 						<SidebarItem
 							href={path}
 							{label}
-							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-2 pl-8 text-xs font-medium"
+							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-3 pl-8 text-sm font-medium"
 						>
 							<svelte:fragment slot="icon">
 								<Icon
 									{icon}
 									style="font-size: 18px"
-									class={path === activeUrl ? 'text-gray-200' : 'text-gray-600 text-opacity-80'}
+									class={path === activeUrl ? 'text-gray-900' : 'text-gray-600 text-opacity-80'}
 								/>
 							</svelte:fragment>
 						</SidebarItem>

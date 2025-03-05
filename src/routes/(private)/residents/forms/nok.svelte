@@ -15,7 +15,7 @@
     const schema = yup.object().shape({
         nextOfKinFullName: yup.string().required().label('Full name'),
         nextOfKinPhoneNumber: yup.string().required().label('Phone number'),
-        relationship: yup.string().required().label('Relationship'),
+        nextOfKinRelationship: yup.string().required().label('Relationship'),
         nextOfKinEmail: yup.string().required().label('Email'),
         nextOfKinAddress: yup.string().required().label('Address'),
     });
@@ -31,7 +31,7 @@
 	<div class="md:grid grid-cols-2 gap-4">
 		<FormInput name="nextOfKinFullName" required showLabel label="Full Name" />
 		<FormInput name="nextOfKinPhoneNumber" required showLabel label="Phone Number" />
-		<FormInput name="relationship" required showLabel label="Relationship to Resident" />
+		<FormInput name="nextOfKinRelationship" required showLabel label="Relationship to Resident" />
 		<FormInput name="nextOfKinEmail" required showLabel label="Email" />
         <div class="col-span-2">
             <FormInput name="nextOfKinAddress" required showLabel label="Address" />

@@ -42,7 +42,7 @@
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-sm">
        <div class="text-center flex flex-col items-center">
-        <div class="text-2xl font-bold tracking-tight">
+        <div class="text-3xl font-bold tracking-tight">
             ShelterSync
         </div>
         <div class="text-xs">Integrated Hostel Management System</div>

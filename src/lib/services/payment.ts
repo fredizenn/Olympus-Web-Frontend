@@ -14,18 +14,20 @@ export interface IPayment {
 
 export const paymentsStore = writable<any>([]);
 
-export const getPayments = async () => {
+export const GetPayments = async () => {
 	try {
-		const ret = await client.get('/payments');
+		const ret = await client.get('/AllPayments');
 		return ret.data;
 	} catch (error) {
 		apiErrorHandler(error);
 	}
 };
 
-export const addPayment = async (data: IPayment) => {
+export const AddPayment = async (data: IPayment) => {
 	try {
-		const ret = await client.post('/payments', data);
+		const ret = await client.post('/payment', {
+			...data
+		});
 		return ret.data;
 	} catch (error) {
 		apiErrorHandler(error);

@@ -8,7 +8,7 @@ export const residentsStore = writable<any>([]);
 export interface IResident {
     firstName: string,
     lastName: string,
-    email: string,
+    emailAddress: string,
     sex: string,
     dateOfBirth: any,
     phoneNumber: string,
@@ -26,7 +26,7 @@ export interface IResident {
 export const residentInit: IResident = {
     firstName: '',
     lastName: '',
-    email: '',
+    emailAddress: '',
     sex: '',
     dateOfBirth: null,
     phoneNumber: '',
@@ -41,28 +41,26 @@ export const residentInit: IResident = {
     expectedStudyEndDate: null,
 
 }
-// export const getResidents = async () => {
-// 	try {
-// 		if (browser) {
-// 			const querySnapshot = await getDocs(collection(hmSysDb, 'residents'));
-// 			const residents: any = [];
-// 			querySnapshot.forEach((doc) => {
-// 				residents.push({ ...doc.data() });
-// 			});
-// 			residentsStore.set(residents);
-// 		}
-// 	} catch (error) {
-// 		console.log(error);
-// 	}
-// };
 
-export async function getResidents () {
+export async function GetResidents () {
 	try {
 		const response = await client.get('/residents');
 		return response.data;
 	} catch (error) {
 		apiErrorHandler(error);
 	}
+}
+
+export async function AddResident(data: any) {
+    try {
+        const response = await client.post('/resident', 
+            {
+            ...data
+        });
+        return response.data;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
 }
 
 // export const addResident = async (data: any) => {

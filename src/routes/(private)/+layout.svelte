@@ -9,7 +9,7 @@
 
   let menus: IMenu[] = [
     {
-      label: 'Home',
+      label: 'Dashboard',
       path: '/dashboard',
       icon: 'hugeicons:home-06',
       iconColor: 'text-[#005C31]'
@@ -24,6 +24,12 @@
       label: 'Payments',
       path: '/payments',
       icon: 'hugeicons:payment-success-02',
+      iconColor: 'text-[#005C31]'
+    },
+    {
+      label: 'Allocations',
+      path: '/allocations',
+      icon: 'material-symbols:all-match-outline-rounded',
       iconColor: 'text-[#005C31]'
     },
     {

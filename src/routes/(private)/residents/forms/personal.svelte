@@ -14,7 +14,7 @@
 	const schema = yup.object().shape({
 		firstName: yup.string().required().label('First name'),
 		lastName: yup.string().required().label('Last name'),
-		email: yup.string().email().required().label('Email'),
+		emailAddress: yup.string().email().required().label('Email'),
 		sex: yup.string().required().label('Sex'),
 		phoneNumber: yup.string().required().label('Phone number'),
 		address: yup.string().required().label('Address')
@@ -42,7 +42,7 @@
 			<FormInput name="dateOfBirth" required showLabel label="Date of Birth" type="date" />
 		</div>
 		<div class="col-span-2">
-			<FormInput name="email" required showLabel label="Email" />
+			<FormInput name="emailAddress" required showLabel label="Email" />
 		</div>
 		<div class="col-span-2">
 			<FormInput name="phoneNumber" required showLabel label="Phone Number" />

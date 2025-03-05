@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/button.svelte';
-	import type { IResident } from '$lib/services/residents';
+	import { AddResident, type IResident } from '$lib/services/residents';
 	import { residentFormStep } from '$lib/stores/layoutStore';
 	import { formatDate } from '$lib/utils/date-formatter';
 	import Icon from '@iconify/svelte';
+	import toast from 'svelte-french-toast';
 	export let data: IResident = {} as IResident;
-	let loading = false;
-    let isComplete = true;
+	export let loading = false;
+    export let isComplete = false;
+
+	export let completeRegistration: () => void = () => {};
+	
 </script>
 
 <div class="">
@@ -72,7 +76,7 @@
 				</div>
 				<div class="bg-white px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-3">
 					<dt class="text-sm/6 font-medium text-gray-900">Email address</dt>
-					<dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{data?.email || 'N/A'}</dd>
+					<dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{data?.emailAddress || 'N/A'}</dd>
 				</div>
 			</dl>
 		</div>
@@ -143,8 +147,10 @@
 
 			<Button
 				otherClasses="w-full p-3 bg-green-600"
-				type="submit"
-				label={'Complete Registration'}
+				type="button"
+				disabled={loading}
+				onClick={() => completeRegistration()}
+				label={loading ? 'Completing Registration...' : 'Complete Registration'}
 			/>
 		</div>
 	{/if}
