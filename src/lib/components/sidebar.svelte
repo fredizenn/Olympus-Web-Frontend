@@ -78,7 +78,7 @@
 						<SidebarItem
 							href={path}
 							{label}
-							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-3 pl-8 text-sm font-medium"
+							class="flex items-center w-5/6 mx-auto align-middle gap-2 rounded-md px-1 py-2.5 pl-8 text-sm font-medium"
 						>
 							<svelte:fragment slot="icon">
 								<Icon

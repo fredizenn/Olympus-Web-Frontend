@@ -15,7 +15,7 @@ export const getMaintenanceRequests = async () => {
 
 export const addMaintenanceRequest = async (data: any) => {
 	try {
-		const ret = await client.post('/MaintenanceRequest', data);
+		const ret = await client.post('/MaintenanceRequest', {...data});
 		return ret.data;
 	} catch (error) {
 		apiErrorHandler(error);

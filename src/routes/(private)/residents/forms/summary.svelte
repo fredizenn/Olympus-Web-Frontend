@@ -35,7 +35,7 @@
 			/>
 		</div>
     {:else}
-    <div class="w-full flex justify-end">
+    <div class="w-full flex justify-start">
 		<button
 			class="flex justify-end items-center gap-2 py-1 text-sm"
 			on:click={() => residentFormStep.set(2)}>&larr; Back</button

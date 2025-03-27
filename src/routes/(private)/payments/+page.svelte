@@ -11,11 +11,12 @@
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import Button from '$lib/components/button.svelte';
-	import { getRooms, roomsStore } from '$lib/services/rooms';
+	import { getRoom, getRooms, roomsStore } from '$lib/services/rooms';
 	import { GetResidents } from '$lib/services/residents';
 	import { toCurrencyFormat } from '$lib/utils/currency';
 	import SlideOver from '$lib/components/ui/slideOver.svelte';
 	import Loader from '$lib/components/loader.svelte';
+	import Icon from '@iconify/svelte';
 
 	$activePageHeader = 'Residents';
 	$pageDescription = 'Manage resident fee payments';
@@ -25,17 +26,18 @@
 	let loadingRooms = false;
 	let saving = false;
 	let residentOptions: any = [];
+	let loadingRoom: any = false;
 	let rooms: any = [];
 	let showAddModal = false;
 	let roomPrice = 0;
+	let roomNumber: any = '';
 	const schema = yup.object().shape({
 		resident: yup.object().test('Resident', function (value) {
 			return !!value;
 		}),
-		paymentDate: yup.string().required(),
-		room: yup.object().test('Resident', function (value) {
-			return !!value;
-		}),
+		paymentDate: yup.string().required().label('Date of Payment'),
+		// roomNumber: yup.string().required('There must be a valid room number'),
+		// roomPrice: yup.number().min(1).required('There must be a valid fee'),
 		amountPaid: yup.number().required('Amount paid is required')
 	});
 	const paymentMethods = [
@@ -78,7 +80,7 @@
 		// 	name: 'Room Number',
 		// 	cell: (row: any) => row?.room?.roomNumber
 		// },
-		
+
 		{
 			name: 'Amount Paid (GHC)',
 			cell: (row: any) => toCurrencyFormat(row.amountPaid)
@@ -118,7 +120,6 @@
 			loadingRooms = true;
 			const res = await getRooms();
 			if (res.isSuccess) {
-
 				rooms = res.data.map((r: any) => {
 					return {
 						...r,
@@ -143,7 +144,7 @@
 				residentOptions = res.data.map((r: any) => {
 					return {
 						...r,
-						label: r.fullName,
+						label: r.firstName + ' ' + r.lastName,
 						value: r.residentId,
 						residentNumber: r.residentNumber
 					};
@@ -168,8 +169,8 @@
 			const data: any = {
 				residentNumber: values.resident.residentNumber,
 				amountPaid: values.amountPaid,
-				paymentDate: values.dateOfPayment,
-				roomNumber: values.room.roomNumber,
+				paymentDate: values.paymentDate,
+				roomNumber: roomNumber,
 				paymentMethod: values.paymentMethod.value
 			};
 			const res = await AddPayment(data);
@@ -187,10 +188,30 @@
 		}
 	}
 
-	async function onRoomChange({ detail }: any) {
-		console.log({detail})
+	async function fetchRoom() {
+		try {
+			loadingRoom = true;
+			const res: any = await getRoom(roomNumber);
+			if (res.isSuccess) {
+				roomPrice = res.data.roomPrice;
+				loadingRoom = false;
+			} else {
+				toast.error(res.message);
+				loadingRoom = false;
+			}
+		} catch (error) {
+			loadingRoom = false;
+			toast.error(String(error));
+		}
+	}
+
+	async function onResidentChange({ detail }: any) {
+		console.log({ detail });
 		// const { occupants } = detail;
-		roomPrice = detail.roomPrice;
+		roomNumber = ''
+		roomPrice = 0;
+		roomNumber = detail.allocation.roomNumber;
+		await fetchRoom();
 		// residentOptions = occupants;
 	}
 
@@ -220,20 +241,15 @@
 	<!-- {#if loading}
 		<Loader />
 	{:else} -->
-		<DataTable {loading} on:buttonClicked={handleAction} {columns} bodyData={paymentsList} />
+	<DataTable {loading} on:buttonClicked={handleAction} {columns} bodyData={paymentsList} />
 	<!-- {/if} -->
 </div>
 
-<SlideOver
-	title="New Payment"
-	show={showAddModal}
-	onClose={() => {
-		showAddModal = false;
-	}}
->
-	<Form {schema} on:submit={createPayment}>
-		<div class="space-y-4 gap-4">
-			<FormSelect
+{#if showAddModal}
+	<Modal title="Add Payment" bind:open={showAddModal}>
+		<Form {schema} on:submit={createPayment}>
+			<div class="space-y-4 gap-4">
+				<!-- <FormSelect
 				options={rooms}
 				name="room"
 				onChange={onRoomChange}
@@ -241,38 +257,60 @@
 				required
 				showLabel
 				label="Room"
-			/>
-			<FormSelect
-				options={residentOptions}
-				name="resident"
-				valueAsObject
-				required
-				loading={loadingResidents}
-				fields={['residentNumber']}
-				showLabel
-				label="Resident - Search by Resident Number"
-			/>
-			<div class="col-span-2">
-				<FormInput readonly bind:value={roomPrice} showLabel label="Room Fee (GHC)" />
+			/> -->
+				<FormSelect
+					options={residentOptions}
+					name="resident"
+					valueAsObject
+					required
+					onChange={onResidentChange}
+					loading={loadingResidents}
+					fields={['residentNumber']}
+					showLabel
+					label="Resident - Search by Resident Number"
+				/>
+				<div class="col-span-2">
+					<FormInput
+						disabled
+						bind:value={roomNumber}
+						name="roomNumber"
+						showLabel
+						label="Room Number"
+					/>
+				</div>
+				<div class="col-span-2 relative w-full flex flex-col">
+					<FormInput
+						disabled
+						bind:value={roomPrice}
+						name="roomFee"
+						showLabel
+						label="Room Fee (GHC)"
+					/>
+					<!-- {#if loadingRoom}
+					<div class="absolute left-2 top-[34px] sm:top-8">
+						<Icon icon="eos-icons:loading" class="h-4 w-4 cursor-pointer sm:h-5 sm:w-5" />
+					</div>
+					{/if} -->
+				</div>
+				<FormInput name="amountPaid" type="number" min={1} required showLabel label="Amount Paid" />
+				<FormInput name="paymentDate" type="date" required showLabel label="Date of Payment" />
+				<FormSelect
+					options={paymentMethods}
+					name="paymentMethod"
+					valueAsObject
+					required
+					showLabel
+					label="Payment Method"
+				/>
 			</div>
-			<FormInput name="amountPaid" type="number" min={1} required showLabel label="Amount Paid" />
-			<FormInput name="paymentDate" type="date" required showLabel label="Date of Payment" />
-			<FormSelect
-				options={paymentMethods}
-				name="paymentMethod"
-				valueAsObject
-				required
-				showLabel
-				label="Payment Method"
-			/>
-		</div>
-		<div class="flex justify-center w-full mt-4">
-			<Button
-				type="submit"
-				disabled={saving}
-				otherClasses="p-3 bg-green-600 w-full"
-				label={saving ? 'Saving...' : 'Add Payment'}
-			/>
-		</div>
-	</Form>
-</SlideOver>
+			<div class="flex justify-center w-full mt-4">
+				<Button
+					type="submit"
+					disabled={saving}
+					otherClasses="p-3 bg-green-600 w-full"
+					label={saving ? 'Saving...' : 'Add Payment'}
+				/>
+			</div>
+		</Form>
+	</Modal>
+{/if}

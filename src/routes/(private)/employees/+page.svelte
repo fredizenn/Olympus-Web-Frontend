@@ -25,6 +25,7 @@
 	let deleting = false;
 	let showDeleteModal = false;
 	let showEditModal = false;
+	let list: any = [];
 	let showAddModal = false;
 	let currentEmployeeId = 0;
 	let currentEmployeeName: any = '';
@@ -75,11 +76,16 @@
 	async function fetchEmployees() {
 		loading = true;
 		try {
-			await getEmployees();
+			const res = await getEmployees();
+			if (!res.isSuccess) {
+				loading = false;
+				return;	
+			}
+			list = res.data
 			loading = false;
-		} catch (error) {
+		} catch (error: any) {
 			loading = false;
-			console.log(error);
+			toast.error(error.message);
 		}
 	}
 
@@ -188,7 +194,7 @@
 		on:buttonClicked={handleAction}
 		{actionButtons}
 		{columns}
-		bodyData={$employeesStore}
+		bodyData={list}
 	/>
 
 	<!-- {/if} -->
@@ -211,8 +217,8 @@
 				/>
 				<FormInput name="salary" type="number" min={1} required showLabel label="Salary" />
 			</div>
-			<div class="flex justify-center w-full mt-2">
-				<Button type="submit" disabled={saving} label={saving ? 'Saving...' : 'Add Employee'} />
+			<div class="flex justify-center w-full mt-4">
+				<Button type="submit" disabled={saving} otherClasses="bg-green-600 w-full p-3" label={saving ? 'Saving...' : 'Add Employee'} />
 			</div>
 		</Form>
 	</Modal>
@@ -238,7 +244,7 @@
 				<FormInput name="salary" type="number" min={1} required showLabel label="Salary" />
 			</div>
 			<div class="flex justify-center w-full mt-2">
-				<Button type="submit" disabled={saving} label={saving ? 'Saving...' : 'Save'} />
+				<Button type="submit" disabled={saving} otherClasses="bg-green-600 w-full p-3" label={saving ? 'Saving...' : 'Save'} />
 			</div>
 		</Form>
 	</Modal>

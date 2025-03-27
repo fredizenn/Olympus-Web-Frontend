@@ -5,7 +5,13 @@
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { AddResident, GetResidents, residentInit, residentsStore, type IResident } from '$lib/services/residents';
+	import {
+		AddResident,
+		GetResidents,
+		residentInit,
+		residentsStore,
+		type IResident
+	} from '$lib/services/residents';
 	import {
 		activePageHeader,
 		pageActionButtons,
@@ -81,8 +87,9 @@
 		// },
 		{
 			name: 'Status',
-			cell: (row: any) => (row.isAllocated ? 'Allocated' : 'Not Allocated'),
-			cellStyle: (row: any) => (row.isAllocated ? 'bg-green-100 w-full' : 'bg-gray-100 w-full')
+			cell: (row: any) => row.allocationStatus,
+			cellStyle: (row: any) =>
+				row.allocationStatus === 'Allocated' ? 'bg-green-100 w-full' : 'bg-gray-100 w-full'
 		}
 	];
 
@@ -118,7 +125,7 @@
 		try {
 			saving = true;
 			const res = await AddResident(data);
-			if(res.isSuccess) {
+			if (res.isSuccess) {
 				saving = false;
 				isComplete = true;
 				await fetchResidents();
@@ -191,27 +198,28 @@
 	</Modal>
 {/if} -->
 
-<SlideOver title="Resident Registration" show={showAddModal} onClose={() => {(showAddModal = false); data={ ...residentInit, }} }>
-	{#if $residentFormStep === 0}
-		<Personal {data} on:submit={onFormChange} />
-	{:else if $residentFormStep === 1}
-		<div class="w-full flex justify-end">
-			<button
-				class="flex justify-end items-center gap-2 py-1 text-sm"
-				on:click={() => residentFormStep.set(0)}>&larr; Back</button
-			>
-		</div>
-		<Nok {data} on:submit={onFormChange} />
-	{:else if $residentFormStep === 2}
-	<div class="w-full flex justify-end">
-		<button
-			class="flex justify-end items-center gap-2 py-1 text-sm"
-			on:click={() => residentFormStep.set(1)}>&larr; Back</button
-		>
-	</div>
-		<Institution on:submit={onFormChange} {data} />
-	{:else}
-	
-		<Summary {completeRegistration} loading={saving} {isComplete} {data} />
-	{/if}
-</SlideOver>
+{#if showAddModal}
+	<Modal title="Add Resident" bind:open={showAddModal}>
+		{#if $residentFormStep === 0}
+			<Personal {data} on:submit={onFormChange} />
+		{:else if $residentFormStep === 1}
+			<div class="w-full flex justify-start">
+				<button
+					class="flex justify-start items-center gap-2 py-1 text-sm"
+					on:click={() => residentFormStep.set(0)}>&larr; Back</button
+				>
+			</div>
+			<Nok {data} on:submit={onFormChange} />
+		{:else if $residentFormStep === 2}
+			<div class="w-full flex justify-start">
+				<button
+					class="flex justify-start items-center gap-2 py-1 text-sm"
+					on:click={() => residentFormStep.set(1)}>&larr; Back</button
+				>
+			</div>
+			<Institution on:submit={onFormChange} {data} />
+		{:else}
+			<Summary {completeRegistration} loading={saving} {isComplete} {data} />
+		{/if}
+	</Modal>
+{/if}

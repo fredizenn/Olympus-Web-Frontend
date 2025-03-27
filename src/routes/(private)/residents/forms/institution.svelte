@@ -33,7 +33,7 @@
 </script>
 
 <Form {schema} init={data} on:submit={submit}>
-	<div class="text-xs font-semibold text-gray-400 text-center pb-6">Institution of Study</div>
+	<div class="text-sm font-semibold text-gray-400 text-center pb-6">Institution of Study</div>
 	<div class="md:grid grid-cols-2 gap-4">
 		<div class="col-span-2">
 			<FormInput name="institutionOfStudy" showLabel label="Institution Name" />

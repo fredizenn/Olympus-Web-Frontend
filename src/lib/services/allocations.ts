@@ -9,3 +9,12 @@ export async function GetAllocations () {
 		apiErrorHandler(error);
 	}
 }
+
+export async function AllocateRoom (data: any) {
+	try {
+		const response = await client.post('/allocation', data);
+		return response.data;
+	} catch (error) {
+		apiErrorHandler(error);
+	}
+}

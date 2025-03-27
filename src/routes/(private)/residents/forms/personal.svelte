@@ -27,7 +27,7 @@
 </script>
 
 <Form {schema} init={data} on:submit={submit}>
-	<div class="text-xs font-semibold text-gray-400 text-center pb-6">Personal Details</div>
+	<div class="text-sm font-semibold text-gray-400 text-center pb-6">Personal Details</div>
 	<div class="md:grid grid-cols-2 gap-y-6">
 		<div class="col-span-2">
 			<FormInput name="firstName" required showLabel label="First Name" />

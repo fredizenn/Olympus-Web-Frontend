@@ -4,28 +4,33 @@
 	import FormInput from '$lib/components/controls/formInput.svelte';
 	import Loader from '$lib/components/loader.svelte';
 	import Modal from '$lib/components/modal.svelte';
-	import { addRoom, allocation, getRooms, roomsStore } from '$lib/services/rooms';
+	import { addRoom, getRooms } from '$lib/services/rooms';
 	import { activePageHeader, pageActionButtons, pageDescription } from '$lib/stores/layoutStore';
 	import { onMount } from 'svelte';
 	import toast, { Toaster } from 'svelte-french-toast';
 	import * as yup from 'yup';
 	// import pkg from 'lodash';
 	import { v4 as uuidv4 } from 'uuid';
-	import { GetResidents, residentsStore } from '$lib/services/residents';
+	import { GetResidents } from '$lib/services/residents';
 	import FormSelect from '$lib/components/controls/formSelect.svelte';
 	import DataTable from '$lib/components/dataTable.svelte';
 	import { toCurrencyFormat } from '$lib/utils/currency';
 	import {
 		addMaintenanceRequest,
 		getMaintenanceRequests,
-		maintenanceRequestsStore,
+		maintenanceRequestsStore
 	} from '$lib/services/maintenance';
 	import FormTextArea from '$lib/components/controls/formTextArea.svelte';
 	import { formatDate } from '$lib/utils/date-formatter';
+	import { getEmployees } from '$lib/services/employees';
 
 	// const { uniqueId } = pkg
 	let loading = false;
 	let showAddModal = false;
+	let loadingStaff = false;
+	let loadingResidents = false;
+	let staff: any = [];
+	let loadingRooms = false;
 	let currentRequest: any;
 	let saving = false;
 	let showUpdateStatusModal = false;
@@ -33,9 +38,10 @@
 	let modalButtonLabel = '';
 	let modalButtonAction: any;
 	let modalDescription: any;
-	let rooms: any = []
+	let rooms: any = [];
 	let btnIndx: any;
-	let residents: any = []
+	let residents: any = [];
+	let list: any = [];
 
 	$activePageHeader = 'Maintenance Requests';
 	$pageDescription = 'Manage maintenance requests.';
@@ -45,12 +51,11 @@
 			icon: 'hugeicons:folder-add',
 			onClick: () => (showAddModal = true)
 		}
-
 	];
 	const columns = [
 		{
-			name: 'Code',
-			cell: (row: any) => row.mrCode
+			name: 'Room Number',
+			cell: (row: any) => row.roomNumber
 		},
 		{
 			name: 'Description',
@@ -58,15 +63,15 @@
 		},
 		{
 			name: 'Reported By',
-			cell: (row: any) => row.issuedBy || 'N/A'
+			cell: (row: any) => row.resident
 		},
 		{
-			name: 'Room Number',
-			cell: (row: any) => row.room.roomNumber || 'N/A'
+			name: 'Assigned To',
+			cell: (row: any) => row.assignedEmployee || 'N/A'
 		},
 		{
 			name: 'Date Reported',
-			cell: (row: any) => formatDate(row.createdAt)
+			cell: (row: any) => formatDate(row.requestDate)
 		},
 		{
 			name: 'Status',
@@ -86,66 +91,123 @@
 	$activePageHeader = 'Maintenance Requests';
 
 	const schema = yup.object().shape({
-		description: yup.string().required().label('Description'),
+		description: yup.string().required().label('Description')
 	});
 
 	async function fetchMaintenanceRequests() {
 		try {
 			loading = true;
-			await getMaintenanceRequests();
+			const res = await getMaintenanceRequests();
+			if (res.isSuccess) {
+				list = res.data;
+				loading = false;
+			} else {
+				loading = false;
+				toast.error(res.message);
+			}
+		} catch (error: any) {
 			loading = false;
-		} catch (error) {
-			loading = false;
-			console.log(error);
+			toast.error(error.message);
 		}
 	}
 
 	async function createMaintenanceRequest({ detail }: any) {
 		saving = true;
 		const { values } = detail;
-		console.log({ detail });
+		const data = {
+			description: values.description,
+			residentNumber: values.resident.residentNumber,
+			roomNumber: values.room.roomNumber,
+			employeeId: values?.employee?.id
+		};
 		try {
-			const res = await addMaintenanceRequest({
-				...values,
-				mrCode: `MTR_${uuidv4()}`,
-				status: 'Pending',
-				createdAt: Date.now()
-			});
+			const res = await addMaintenanceRequest(data);
+			if (!res.isSuccess) {
+				toast.error(res.message);
+				saving = false;
+				return
+			}
 			saving = false;
 			showAddModal = false;
-			toast.success('Request created successfully.');
+			toast.success(res.message);
 			await fetchMaintenanceRequests();
-		} catch (e) {
-			toast.error('Error adding room. Please try again later.');
+		} catch (e: any) {
+			toast.error(e.message);
+			saving = false;
 		}
 	}
 
-	async function updateMaintenanceStatus(mrCode: string, status: any) {
-		saving = true;
-		try {
-			const res = await updateStatus(mrCode, status);
-			await fetchMaintenanceRequests();
-			saving = false;
-		} catch (e) {}
-	}
-
+	// async function updateMaintenanceStatus(mrCode: string, status: any) {
+	// 	saving = true;
+	// 	try {
+	// 		const res = await updateStatus(mrCode, status);
+	// 		await fetchMaintenanceRequests();
+	// 		saving = false;
+	// 	} catch (e) {}
+	// }
 
 	async function fetchRooms() {
 		try {
-			loading = true;
-			await getRooms();
-			rooms = $roomsStore.map((r: any) => {
+			loadingRooms = true;
+			const res = await getRooms();
+			if (!res.isSuccess) {
+				loadingRooms = false;
+				return
+			}
+			rooms = res.data.map((r: any) => {
 				return {
 					...r,
 					label: r.roomNumber,
-					value: r.roomId
+					value: r.roomNumber
 				};
-			})
-			residents = rooms.map((r: any) => r.occupants).flat();
+			});
 			loading = false;
-		} catch (error) {
+		} catch (error: any) {
 			loading = false;
-			console.log(error);
+			toast.error(error.message);
+		}
+	}
+
+	async function fetchEmployees() {
+		try {
+			loadingStaff = true;
+			const res = await getEmployees();
+			if (!res.isSuccess) {
+				loadingStaff = false;
+				return
+			}
+			staff = res.data.map((s: any) => {
+				return {
+					value: s.id,
+					label: s.firstName + ' ' + s.lastName
+				}
+			});
+			loadingStaff = false;
+		} catch (error: any) {
+			loadingStaff = false;
+			toast.error(error.message);
+		}
+	}
+
+	async function fetchResidents() {
+		try {
+			loadingResidents = true;
+			const res = await GetResidents();
+			if (!res.isSuccess) {
+				loadingResidents = false;
+				return
+			}
+			residents = res.data.map((r: any) => {
+				return {
+					...r,
+					label: r.firstName + ' ' + r.lastName,
+					value: r.residentNumber
+				};
+			});
+			loadingResidents = false;
+		} catch (error: any) {
+			loadingResidents = false;
+			toast.error(error.message);
 		}
 	}
 
@@ -186,33 +248,35 @@
 		showUpdateStatusModal = true;
 	}
 
-	async function doStatusChange() {
-		try {
-			if (btnIndx === 0) {
-				await updateMaintenanceStatus(currentRequest.mrCode, {
-					...currentRequest,
-					status: 'Resolved'
-				});
-				showUpdateStatusModal = false;
-				toast.success('Request has been marked as resolved');
-			} else if (btnIndx === 1) {
-				await updateMaintenanceStatus(currentRequest.mrCode, {
-					...currentRequest,
-					status: 'Cancelled'
-				});
-				showUpdateStatusModal = false;
-				toast.success('Request has been cancelled');
-			} else {
-				toast.error('Something went wrong. Please try again later');
-			}
-		} catch (e: any) {
-			toast.error(e);
-		}
-	}
+	// async function doStatusChange() {
+	// 	try {
+	// 		if (btnIndx === 0) {
+	// 			await updateMaintenanceStatus(currentRequest.mrCode, {
+	// 				...currentRequest,
+	// 				status: 'Resolved'
+	// 			});
+	// 			showUpdateStatusModal = false;
+	// 			toast.success('Request has been marked as resolved');
+	// 		} else if (btnIndx === 1) {
+	// 			await updateMaintenanceStatus(currentRequest.mrCode, {
+	// 				...currentRequest,
+	// 				status: 'Cancelled'
+	// 			});
+	// 			showUpdateStatusModal = false;
+	// 			toast.success('Request has been cancelled');
+	// 		} else {
+	// 			toast.error('Something went wrong. Please try again later');
+	// 		}
+	// 	} catch (e: any) {
+	// 		toast.error(e);
+	// 	}
+	// }
 
 	onMount(async () => {
 		await fetchMaintenanceRequests();
 		await fetchRooms();
+		await fetchEmployees();
+		await fetchResidents();
 	});
 </script>
 
@@ -221,13 +285,7 @@
 	<!-- {#if loading}
 		<Loader />
 	{:else} -->
-	<DataTable
-		{loading}
-		{actionButtons}
-		on:buttonClicked={handleAction}
-		{columns}
-		bodyData={$maintenanceRequestsStore}
-	/>
+	<DataTable {loading} {actionButtons} on:buttonClicked={handleAction} {columns} bodyData={list} />
 
 	<!-- {/if} -->
 </div>
@@ -256,14 +314,32 @@
 {#if showAddModal}
 	<Modal title="Maintenance Request" bind:open={showAddModal}>
 		<Form {schema} on:submit={createMaintenanceRequest}>
-			<div class="space-y-2">
-				<FormSelect name="room" valueAsObject options={rooms} showLabel label="Room" required />
-				<FormInput name="issuedBy" showLabel label="Issued By" required />
+			<div class="space-y-4">
+				<FormSelect name="room" valueAsObject loading={loadingRooms} options={rooms} showLabel label="Room" required />
+				<FormSelect
+					name="resident"
+					valueAsObject
+					options={residents}
+					loading={loadingResidents} 
+					showLabel
+					label="Resident"
+					required
+				/>
 				<FormInput name="description" showLabel label="Description" required />
+				<FormSelect
+					name="employee"
+					valueAsObject
+					options={staff}
+					loading={loadingResidents} 
+
+					showLabel
+					label="Assign To"
+					required
+				/>
 			</div>
 
-			<div class="w-full flex items-center py-4 justify-center">
-				<Button type="submit" label={saving ? 'Saving...' : 'Save'} disabled={saving} />
+			<div class="w-full flex items-center py-4 mt-2 justify-center">
+				<Button type="submit" label={saving ? 'Saving...' : 'Save'} otherClasses="bg-green-600 p-3 w-full" disabled={saving} />
 			</div>
 		</Form>
 	</Modal>
@@ -292,7 +368,6 @@
 				icon="hugeicons:alert-02"
 				disabled={saving}
 				type="button"
-				onClick={doStatusChange}
 			/>
 		</div>
 	</Modal>

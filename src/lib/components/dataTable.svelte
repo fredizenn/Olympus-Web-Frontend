@@ -86,9 +86,9 @@
 		<Icon icon="line-md:loading-loop" class="text-indigo-500 w-12 h-12" />
 	</div>
 {:else if bodyData?.length > 0}
-	<div class="m-2 flex justify-end">
+	<div class="m-2 flex justify-start">
 		<div class="relative">
-			<Button color="light">
+			<Button color="light" class="flex text-xs items-center">
 				<Icon icon="mdi:view-column" class="mr-2 h-5 w-5" />
 				Show/Hide Columns
 			</Button>

@@ -45,7 +45,7 @@
       iconColor: 'text-[#005C31]'
     },
     {
-      label: 'Employees',
+      label: 'Staff',
       path: '/employees',
       icon: 'hugeicons:work-update',
       iconColor: 'text-[#005C31]'
